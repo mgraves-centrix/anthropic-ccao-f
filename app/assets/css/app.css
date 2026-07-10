@@ -46,3 +46,45 @@ a { color: var(--accent-ink); }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---- Phase 3 components ---- */
+.muted { color: var(--muted); }
+.examgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.examcard { display: block; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r); padding: 1rem; text-decoration: none; color: var(--ink); }
+.examcard:hover { border-color: var(--accent); box-shadow: var(--shadow, 0 4px 16px rgba(0,0,0,.08)); }
+.examcard h2 { font-size: 1.05rem; margin: .5rem 0 .25rem; }
+.examhead { display: flex; align-items: center; gap: .6rem; margin-bottom: .5rem; }
+.tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--line); margin: 1rem 0; flex-wrap: wrap; }
+.tab { padding: .5rem .8rem; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; }
+.tab.is-active { color: var(--accent-ink); border-bottom-color: var(--accent); font-weight: 600; }
+.tabbody > .card { margin-bottom: 1rem; }
+.weights { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .4rem; }
+.weights li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: .3rem; }
+.opts { display: grid; gap: .5rem; margin: .8rem 0; }
+.opt { text-align: left; padding: .7rem .9rem; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+.opt.selected { border-color: var(--accent); background: var(--accent-tint); }
+.opt.correct { border-color: var(--correct); background: var(--correct-tint); }
+.opt.wrong { border-color: var(--wrong); background: var(--wrong-tint); }
+.qstem { font-size: 1.1rem; font-weight: 500; }
+.rationale { border-left: 3px solid var(--accent); background: var(--surface-2); padding: .6rem .8rem; border-radius: var(--r-sm); margin-top: .6rem; }
+.rationale.right { border-left-color: var(--correct); }
+.rationale.wrong { border-left-color: var(--wrong); }
+.runner__top { display: flex; align-items: center; gap: .6rem; margin-bottom: .5rem; }
+.runner__nav { display: flex; gap: .5rem; margin-top: .8rem; }
+.timer { margin-left: auto; font-family: var(--font-mono); font-weight: 600; border: 1px solid var(--line-strong); padding: .2rem .5rem; border-radius: var(--r-sm); }
+.scenario-frame { background: var(--accent-tint); color: var(--accent-ink); padding: .4rem .7rem; border-radius: var(--r-sm); margin-bottom: .5rem; }
+.verdict { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border-radius: var(--r); color: #fff; margin-bottom: 1rem; }
+.verdict--green { background: var(--correct); }
+.verdict--amber { background: var(--amber); }
+.verdict--red { background: var(--wrong); }
+.verdict__icon { font-size: 1.6rem; width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.6); border-radius: 999px; }
+.verdict__score { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; }
+.recs ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+.recs a { color: var(--accent-ink); }
+.prog-controls { display: flex; gap: .4rem; align-items: center; margin-bottom: .8rem; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 999px; padding: .3rem .7rem; cursor: pointer; font: inherit; font-size: .85rem; }
+.chip.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.prog-controls .sep { width: 1px; height: 20px; background: var(--line-strong); margin: 0 .3rem; }
+.chart-empty { padding: 2rem; text-align: center; color: var(--muted); background: var(--surface-2); border-radius: var(--r-sm); }
+.switcher__sel { font: inherit; padding: .3rem .5rem; border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+.visually-hidden, .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
