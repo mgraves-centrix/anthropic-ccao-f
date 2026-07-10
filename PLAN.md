@@ -13,11 +13,18 @@ from this, plus author the three remaining exam banks, without further design wo
 |---|----------|----------|
 | A | Offline / double-click build once scoring is server-side | **Drop offline entirely.** All access is the authenticated portal. Today's self-contained `index.html` becomes a *content source* for seeding, then is retired. |
 | B | Mock per-item feedback | **Hide until submit.** Mock reveals correctness/rationale/reference only after submit or timer expiry. Practice keeps instant per-item feedback. This also hardens protection (incremental saves never return correctness). |
-| C | Team size | **Small (<25).** SWA built-in invitations + a GitHub allowlist are sufficient; comfortably Free tier. |
+| C | Team size | **Small (<25).** SWA built-in invitations + a GitHub allowlist are sufficient. |
 | D | First exam to author after the platform ships | **CCAR-F first** — de-risk the scenario data model/UX early, since it is the only non-standard format. |
+| E | Identity: credential-less external users | **Entra External ID + email one-time-passcode (OTP).** You have an Entra tenant; external users with no Microsoft account authenticate via an emailed code (or B2B guest invite). GitHub remains a second method. See §4. |
+| F | Security posture | **Hardened / "assume-hostile."** This is a security team's tool. Adopt defense-in-depth (§15): tenant-locked SSO + MFA/Conditional Access, managed identity (no connection strings), Key Vault, strict CSP/headers, rate limiting, audit logging. This **justifies SWA Standard tier** (custom Entra auth + managed identity require it) — the one deliberate departure from "Free where feasible." |
+| G | Scoring | **Reuse the CCAO-F formula** exactly: `scaled = round(100 + accuracy × 900)`, clamped 100–1000 (720 cut ≈ 68.9% correct). §5. |
+| H | CCAR-F item volume | **60 items authored per scenario → 360-item bank** (6 scenarios); the 60-item mock draws 4 scenarios × 15 items. §8. |
+| I | Results UX | **Green/red pass-fail highlight + "barely passing" study recommendations** driven by per-domain %. §10. |
 
 Everything in the "DECISIONS ALREADY MADE (LOCKED)" block of the brief is treated as
-fixed and designed to, not re-litigated.
+fixed and designed to, not re-litigated. **One update:** the "stay on Free tier"
+preference yields to the security requirement — see decision F and §15 for the
+Standard-tier controls and their cost.
 
 ---
 
@@ -79,7 +86,26 @@ Richer queries (secondary indexes, per-date filters) and change feed for cleanup
 **Con:** overrides the locked Table Storage decision and can exceed Free-tier intent.
 **Verdict:** rejected — Table Storage is locked and is *sufficient* at this scale (§3).
 
-**Recommendation: the primary architecture above.**
+### Recommendation (revised for the security requirement)
+
+Because this is a security team's tool (decision F), the recommended build is the
+primary architecture **on SWA Standard tier**, using **BYO (linked) Azure Functions
+with a managed identity** to reach Table Storage instead of a connection string:
+
+- **Standard tier is required anyway** for custom Entra ID auth (tenant-locking the
+  app, enforcing MFA/Conditional Access — §4) — so we spend it once and also gain
+  managed identity, private-endpoint options, and BYO-Functions timer triggers.
+- **Managed identity → no storage secret exists** to leak; the Function authenticates
+  to Storage via Entra RBAC (`Storage Table Data Contributor`), scoped least-privilege.
+- **Timer triggers** make the 3-day cleanup and mock auto-submit a clean scheduled
+  sweep *in addition to* the lazy on-read enforcement (§9) — defense in depth.
+
+If cost must be minimized and the security bar relaxed, the **Free-tier fallback** is
+managed Functions + a Key Vault-referenced connection string + GitHub/pre-configured
+Entra auth (no tenant lock, no managed identity, lazy-cleanup only). This is explicitly
+**lower assurance** and not recommended for this audience. Cost note: SWA Standard is
+~$9/app/month; Functions Consumption + Table Storage remain within/near free grants at
+this volume; Key Vault is a few cents/month. See §15 for the full control set.
 
 ---
 
@@ -90,17 +116,24 @@ core; content authoring (§8) is a parallel workstream that starts once the plat
 (Phase 3) can host a second exam.
 
 ### Phase 1 — Team access (auth first)
-**Scope:** Lock the whole app behind SWA built-in auth. Offer **GitHub** *and*
-**email-invite (Entra ID / `aad`)** sign-in. Only users granted the custom
-`authorized` role can load the SPA or hit any `/api/*` route.
-**Change vs. today:** add `staticwebapp.config.json` with role-gated routes; add a
-minimal anonymous login landing page; wire `/.auth/me` into app bootstrap; unauthorized
-users get a "request access" page, not the app.
+**Scope:** Lock the whole app behind auth on **SWA Standard**. Offer **tenant-locked
+Entra SSO** (with MFA/Conditional Access), **credential-less external users via Entra
+email OTP / B2B guest**, and **GitHub** as a secondary method. Only users in the
+`AuthorizedUsers` allowlist (custom `authorized` role via `/api/GetRoles`) can load the
+SPA or hit any `/api/*` route. (§4, §15.)
+**Change vs. today:** provision Standard tier + custom Entra app registration; add
+`staticwebapp.config.json` with `rolesSource` + role-gated routes + security headers;
+add the `AuthorizedUsers` table + `GetRoles` function; minimal anonymous login landing;
+wire `/.auth/me` into app bootstrap; unauthorized users get a "request access" page.
 **How you verify:**
-- Incognito → hitting `/` redirects to login; no app HTML/data is served.
-- A non-invited GitHub account authenticates but is denied (`authorized` role absent).
-- An invited account (via GitHub) and an invited email account both load the app.
-- `curl` of any `/api/*` without a principal → 401.
+- Incognito → hitting `/` redirects to login; no app HTML/data served.
+- An authenticated but non-allowlisted account (GitHub *or* Entra) is denied (`authorized`
+  absent); adding a row admits them, deleting it revokes on next request.
+- A credential-less external tester receives an email OTP, signs in, and (once
+  allowlisted) loads the app.
+- MFA/Conditional Access challenge fires per tenant policy.
+- `curl` of any `/api/*` without a valid principal → 401; with a valid but unauthorized
+  principal → 403.
 
 ### Phase 2 — Question protection (server-side scoring)
 **Scope:** Move the question bank and answer keys into Table Storage. The browser
@@ -244,20 +277,39 @@ questions or keys — so analytics can safely remain client-rendered.
 
 ---
 
-## 4. Auth design — email-invite roles + GitHub, mapped to `staticwebapp.config.json`
+## 4. Auth design — tenant-locked Entra (incl. credential-less users) + GitHub
 
-Both sign-in methods resolve to the same gate: a custom **`authorized`** role that must
-be explicitly granted per user (via SWA **invitations**). Authentication ≠
-authorization — a random GitHub or Microsoft account can *authenticate* but sees the
+Both sign-in methods resolve to the same gate: a custom **`authorized`** role granted
+per user. Authentication ≠ authorization — an identity can *authenticate* but sees the
 app only if it holds `authorized`.
 
-- **GitHub login:** `/.auth/login/github`.
-- **Email invite:** SWA invitations assign the `authorized` role to a specific identity;
-  Microsoft/Entra (`aad`) covers "email" sign-in. At <25 users, manual invitations from
-  the SWA portal are the whole ops story (phone-doable).
+### Identity providers
+- **Entra ID (custom app registration) — primary.** Configure custom Entra auth so the
+  app is **locked to your tenant** and subject to your **Conditional Access + MFA**
+  policies (custom auth requires SWA **Standard** — decision F). This is the strong,
+  auditable path for internal team members.
+- **Credential-less external users (decision E).** Two supported patterns, both via your
+  existing tenant:
+  1. **Entra External ID / B2B guest invitations** — invite an external email; the guest
+     signs in with whatever they have.
+  2. **Email one-time passcode (OTP)** — for guests with **no Microsoft account at all**,
+     Entra emails a short-lived code they enter to authenticate. This is the
+     "no credentials" path. (Enable *Email one-time passcode for guests* in the tenant's
+     External Identities settings.)
+  Either way the guest still needs the `authorized` role to pass the gate — invitation
+  to the tenant ≠ access to the portal.
+- **GitHub — secondary.** `/.auth/login/github`, for team members who prefer it. Also
+  role-gated.
 
-Conceptual `staticwebapp.config.json`:
+### Role assignment
+- **Source of truth: an `AuthorizedUsers` Table** (recommended for a security team over
+  ad-hoc SWA invitations) — a small allowlist keyed by the provider identity, with
+  `role` (`authorized` / future `reviewer`) and audit fields (`invitedBy`, `addedAt`).
+  A tiny `GetRoles` function reads it and returns the caller's custom roles to SWA
+  (`rolesSource`), so **de-provisioning is one row delete** and every grant is logged.
+- Manual SWA portal invitations remain a fallback at <25 users.
 
+### `staticwebapp.config.json` (conceptual)
 ```jsonc
 {
   "routes": [
@@ -271,23 +323,24 @@ Conceptual `staticwebapp.config.json`:
     "403": { "rewrite": "/request-access.html" }
   },
   "auth": {
+    "rolesSource": "/api/GetRoles",
     "identityProviders": {
       "github": {},
-      "azureActiveDirectory": { /* Entra config via app settings */ }
+      "customOpenIdConnectProviders": { "entra": { /* tenant-locked app reg */ } }
     }
   }
 }
 ```
 
-- Everything except the login/callback surface requires `authorized`.
-- The API *additionally* re-checks the role server-side from `x-ms-client-principal`
-  (never trust routing alone), and derives `userId` from the principal (never from the
+- Everything except login/callback requires `authorized`.
+- The API **additionally** re-checks the role server-side from `x-ms-client-principal`
+  (never trust routing alone) and derives `userId` from the principal (never from the
   request body).
-- **Future `reviewer` role** (nice-to-have) slots in here to preview `draft` questions.
+- **Future `reviewer` role** slots in here to preview `draft` questions.
 
-**Open item:** confirm whether "email invite" should be Entra ID (`aad`) or a custom
-OIDC provider, and whether you have/need an Entra tenant (personal Microsoft accounts
-work with `aad` without a corporate tenant).
+**Resolved:** you have an Entra tenant; credential-less access = Entra **email OTP** /
+B2B guest (decision E). **Remaining nuance to confirm:** whether external graders should
+get full `authorized` access or a narrower future role.
 
 ---
 
@@ -377,9 +430,23 @@ Resp (aggregates only):
 `catalog`, `POST /attempts` (content), `PATCH` (save), and `GET /attempts` (resume) are
 all key-free by contract.
 
-**Open item — scoring formula:** define the raw→scaled (100–1000) map per exam
-(criterion-referenced; a linear map anchored so the pass threshold lands at 720 is the
-natural choice). Confirm/keep whatever CCAO-F uses today.
+**Scoring formula (resolved — reuse CCAO-F, decision G).** The current app computes:
+
+```js
+scaledFromAccuracy(acc /* 0..1 */) = clamp(round(100 + acc * 900), 100, 1000)
+pass = scaled >= 720            // 720 ⇔ acc ≈ 0.689 (68.9% correct)
+```
+
+- `acc` = correct items / total items in the scored set (multiple-response items are
+  all-or-nothing: fully correct or not, matching today's behavior — confirm this is the
+  intended rule for multi-select).
+- The **mock's** blueprint-weighted item selection reuses today's **largest-remainder
+  apportionment** across domain weights (floor each domain's share, then distribute the
+  remaining slots by largest fractional remainder), clamped to available items/domain.
+- Applies identically to all four exams (all share the 100–1000 scale + 720 cut);
+  per-domain `%` comes straight from `byDomainJson`.
+- The CCAR-F score report also shows **percent-correct by domain** (per its exam guide),
+  which the same `byDomain` aggregates already provide.
 
 ---
 
@@ -471,17 +538,54 @@ consumer Help Center):**
 - **CCDV-F** — Messages API, tool use, streaming, batch, prompt caching, extended
   thinking; Agent SDK; Claude Code (CLAUDE.md, rules, hooks); MCP. Academy: developer /
   API / MCP / Claude Code courses.
-- **CCAR-F** — same platform/Claude Code/MCP docs, framed by the **6 scenarios**
-  (Customer Support Resolution Agent · Code Generation with Claude Code · Multi-Agent
-  Research System · Developer Productivity · Claude Code for CI/CD · Structured Data
-  Extraction). Author questions **under** a `scenarioId`, distributed across D1–D5.
+- **CCAR-F** — same platform/Claude Code/MCP/Agent SDK docs, framed by the **6 scenarios
+  from the exam guide** (reproduced below). Author questions **under** a `scenarioId`,
+  each scenario weighted toward its guide-stated *primary domains* while collectively
+  covering D1–D5.
 - **CCAR-P** — platform/API docs plus RAG, evaluation, observability, and
   governance/compliance (GDPR/HIPAA/FedRAMP), stakeholder-comms objectives from the
   guide.
 
-**Scenario authoring (CCAR-F):** first write the 6 scenario frames (`Scenarios` table),
-then author a coherent group of questions per scenario that collectively cover the
-blueprint. The mock draws 4 of 6 and presents each scenario's questions grouped.
+**Scenario authoring (CCAR-F) — decision H: 60 items per scenario → 360-item bank.**
+Write the 6 scenario frames into the `Scenarios` table (verbatim from the guide), then
+author **60 questions per scenario** (mix of single + multiple-response), skewed to that
+scenario's primary domains. The **mock** draws **4 of 6 scenarios and samples 15 items
+each = 60**, grouped and presented under their frames. Practice can filter by scenario
+and/or domain. This 360-item bank comfortably exceeds the 200+ target and gives strong
+per-scenario variety across mock attempts.
+
+The 6 scenario frames (from the CCAR-F exam guide — reproduce these as the `frame` text):
+
+| ID | Title | Frame (summary) | Primary domains |
+|----|-------|-----------------|-----------------|
+| S1 | Customer Support Resolution Agent | Support agent on the Agent SDK handling high-ambiguity returns/billing/account issues via custom MCP tools (`get_customer`, `lookup_order`, `process_refund`, `escalate_to_human`); target 80%+ first-contact resolution with correct escalation. | D1 Agentic Arch · D2 Tool/MCP · D5 Context/Reliability |
+| S2 | Code Generation with Claude Code | Claude Code for generation/refactor/debug/docs; custom slash commands, CLAUDE.md configs, plan-mode vs direct execution. | D3 Claude Code · D5 Context/Reliability |
+| S3 | Multi-Agent Research System | Agent SDK coordinator delegating to specialized subagents (web search, doc analysis, synthesis, report gen) producing cited reports. | D1 Agentic Arch · D2 Tool/MCP · D5 Context/Reliability |
+| S4 | Developer Productivity with Claude | Agent SDK tools to explore unfamiliar/legacy code, generate boilerplate, automate tasks; built-in tools (Read/Write/Bash/Grep/Glob) + MCP servers. | D2 Tool/MCP · D3 Claude Code · D1 Agentic Arch |
+| S5 | Claude Code for Continuous Integration | Claude Code in CI/CD: automated code review, test generation, PR feedback; prompts that give actionable feedback and minimize false positives. | D3 Claude Code · D4 Prompt/Structured Output |
+| S6 | Structured Data Extraction | Extract from unstructured docs, validate against JSON schemas, high accuracy, graceful edge cases, downstream integration. | D4 Prompt/Structured Output · D5 Context/Reliability |
+
+(Full verbatim frames are captured in the guide extract; store them unabridged in
+`Scenarios.frame`.) Guide-confirmed structure: 60 items, 4-of-6 scenarios, 120 min, 720
+cut, and a score report showing **pass/fail + scaled score + percent-correct by domain**.
+
+**Study-guide course links — Anthropic Academy (Skilljar).** Catalog root:
+`https://anthropic.skilljar.com/` (Academy relaunched Mar 2026; ~17 free courses across
+AI Fluency, Product/Claude 101, Developer deep-dives — API/MCP/Claude Code — Cloud &
+Enterprise). Map courses to each exam's audience in the study guide:
+
+| Exam | Cite these Academy tracks/courses |
+|------|-----------------------------------|
+| CCAO-F (built) | Claude 101, AI Fluency (already linked in the current guide) |
+| CCDV-F | Building with the Claude API · MCP (build servers/clients) · Claude Code / Agent Skills |
+| CCAR-F | Claude Code (config, slash commands, CLAUDE.md) · MCP · Agent SDK / multi-agent |
+| CCAR-P | Claude API · MCP · plus RAG / eval / governance references from platform docs |
+
+Confirmed direct URL: *Building with the Claude API* →
+`https://anthropic-partners.skilljar.com/claude-with-the-anthropic-api`. **Capture the
+exact per-course URLs from the logged-in catalog during authoring** — the public
+`all-courses` page blocks automated fetch (403), so the remaining course deep-links must
+be copied from a browser session (small manual step, not a blocker).
 
 **Validation gate (every bank must pass before seeding):**
 `schema valid · every item has a reference · no duplicate/near-duplicate stems ·
@@ -578,6 +682,35 @@ without weakening protection.
   descriptive `aria-label` summarizing the trend); **empty-state prompt** when the
   window has no attempts.
 
+### Result verdict + "barely passing" study recommendations (decision I)
+Every finalized attempt renders a **verdict banner** and a per-domain readout that drive
+the user to what to study next:
+
+- **Verdict highlight by outcome:**
+  - **Pass, comfortable** (`scaled ≥ 720 + buffer`, default buffer 40 → **≥ 760**): **green**
+    banner, "You're exam-ready" (still lists any weak domains as optional review).
+  - **Pass, marginal** (`720 ≤ scaled < 760`): **amber** banner — "Passing, but thin."
+    Surfaces the study recommendation block (below). Amber is distinct from the green/red
+    pass/fail so a squeaker doesn't read as a solid pass.
+  - **Fail** (`scaled < 720`): **red** banner — "Below the 720 cut." Study block shown.
+- **Study recommendation block** (shown for marginal-pass and fail): from the attempt's
+  `byDomain`, list every domain **below a mastery threshold (default 70%)**, ranked
+  weakest-first, each with:
+  - the domain name + its % correct and the exam's blueprint weight (so high-weight weak
+    domains sort up — weak × heavy = biggest score lever),
+  - a **"Study this →" deep link** to that domain's section in the exam's Study guide
+    (the weakest-domain-callout nice-to-have, promoted into core because you asked for it),
+  - for a **fail**, also a "Retry incorrect / practice this domain" action.
+- **Semantics stay separate:** the verdict green/amber/red are the *semantic* tokens
+  (`--correct/--amber/--wrong`), never an exam accent — consistent with §14 so a pass on
+  the fuchsia exam is still green, not fuchsia.
+- **Thresholds are config**, not magic numbers: `passBuffer` (40) and `masteryPct` (70)
+  live in app config so you can tune "barely passing" without code changes. Same logic
+  feeds the Home readiness estimate and the domain bar colors (green ≥70 / amber ≥50 /
+  red <50), keeping one coherent color story.
+- **Accessibility:** verdict is conveyed by text + icon, not color alone (color-blind
+  safe); the study block is a real list with links, keyboard-navigable.
+
 ---
 
 ## 11. Threat model + security-boundary statement
@@ -641,24 +774,35 @@ Effort S/M/L · dependency · "free once auth/API/store exist?" · conflict chec
 
 ## 13. Remaining open decisions
 
-1. **Email-invite provider:** Entra ID (`aad`) vs a custom OIDC provider for the
-   "email" path — and do you have/need an Entra tenant? (Personal Microsoft accounts
-   work with `aad` without a corporate tenant.)
-2. **Scoring formula:** confirm the raw→scaled (100–1000) mapping per exam and that 720
-   is the anchored pass point. Keep whatever CCAO-F uses today?
-3. **CCAR-F scenario sizing:** items per scenario (summing to 60 for the mock, 200+ for
-   the bank) and how scenario questions map onto the D1–D5 weights.
-4. **Skilljar course URLs** to cite in the study guides for the developer/architect
-   audiences (need the list).
-5. **Rate-limit thresholds** for `submit`/`answer` (anti-harvest) — pick concrete
-   numbers.
-6. **Allowlist source of truth:** rely on SWA invitations only (recommended at <25), or
-   also keep an `AuthorizedUsers` table now for future-proofing?
-7. **PR preview environments:** enable as the phone testing path? (Recommended: yes.)
-8. **Timezone for "by date" windows + 3-day expiry:** UTC internally, display local?
+**Resolved this round:** identity for credential-less users (Entra email OTP / B2B —
+decision E, §4) · security posture + Standard tier (decision F, §15) · scoring formula
+(decision G, §5) · CCAR-F sizing 60/scenario→360 bank, mock 4×15 (decision H, §8) ·
+results verdict + study recommendations (decision I, §10) · rate-limit starting values
+(§15) · allowlist table as role source of truth (§4) · Skilljar catalog root + the exam→
+course mapping (§8).
+
+**Still genuinely open (need your input or a small follow-up):**
+1. **Per-course Skilljar deep-links** — the `all-courses` page blocks automated fetch
+   (403); the exact URLs must be copied from a logged-in browser session during
+   authoring. Confirm you want the full set captured then, or give me the links.
+2. **Multi-response scoring rule** — confirm multiple-response items are all-or-nothing
+   (matches CCAO-F today) vs partial credit. Affects `acc` and per-domain %.
+3. **CCAR-F per-scenario domain mix** — each scenario skews to its guide-stated primary
+   domains; confirm you're fine letting the 360-bank hit the D1–D5 weights *in aggregate*
+   (mock sampling then approximates blueprint) rather than forcing every scenario to
+   mirror the full blueprint.
+4. **External graders' access level** — do invited external (email-OTP) users get full
+   `authorized` access, or a narrower role?
+5. **"Barely passing" thresholds** — I defaulted `passBuffer=40` (marginal = 720–759) and
+   `masteryPct=70`. OK, or different bands?
+6. **PR preview environments** — enable as the phone testing path? (Recommended: yes;
+   note previews are also access-gated so they don't expose content.)
+7. **Timezone for "by date" windows + 3-day expiry** — UTC internally, display local?
    (Recommended.)
-9. **Exam lineup re-check before launch:** the program is expanding through 2026;
-   re-verify the four names/codes/blueprints against the live cert portal at launch.
+8. **Exam lineup re-check before launch** — program is expanding through 2026; re-verify
+   the four names/codes/blueprints against the live cert portal at launch.
+9. **Audit-log retention period** — pick a retention window for the security `Audit`
+   stream (§15).
 
 ---
 
@@ -722,6 +866,79 @@ with white text on the fill; dark-mode variants are lightened specifically to ho
 ≥4.5:1 on the dark surface. **Final values must be run through a contrast validator (and
 a color-blindness check) during Phase 3**, adjusting lightness — not hue — if any cell
 misses, so exam identities stay distinct.
+
+---
+
+## 15. Security hardening & posture (security-team baseline)
+
+This tool is built and used by a security team; the bar is "assume hostile, prove it
+safe." Defense-in-depth across identity, data, transport, app, and supply chain. Items
+marked **[Std]** need SWA Standard tier (already chosen, decision F); the rest are free.
+
+### Identity & access
+- **[Std] Tenant-locked custom Entra SSO** with **MFA + Conditional Access** enforced by
+  policy (device/location/risk). GitHub is secondary and also role-gated (§4).
+- **Least-privilege roles** (`authorized`, future `reviewer`); **allowlist table** is the
+  single source of truth so **de-provisioning is one delete**, and every grant is audited.
+- Server-side role + `userId` derivation from `x-ms-client-principal` on **every** route;
+  routing rules are a convenience, not the control. Reject any client-supplied identity.
+- Short session lifetimes; sign-out clears SWA auth cookie.
+
+### Data protection
+- **[Std] Managed identity → Table Storage** (Entra RBAC `Storage Table Data
+  Contributor`, scoped to the one account) — **no connection string exists to leak**.
+- **Answer keys never leave the server** (§3.2/§5/§11); single strict projection function;
+  optional split-table defense-in-depth.
+- Storage: encryption at rest (default), **TLS 1.2+ only**, **disable public blob/anon
+  access**, key rotation N/A under managed identity. **[Std] private endpoint / firewall**
+  so Storage is reachable only from the Functions, not the public internet.
+- Per-user partitioning is the tenancy boundary; no endpoint returns another user's data;
+  **no all-users aggregate endpoint** exists.
+- Secrets (if any remain, e.g., Entra client secret) live in **Key Vault** referenced by
+  app settings — never in the repo, never in the client. Prefer certificate/managed
+  identity over secrets where possible.
+
+### Application / transport
+- **Strict security headers** (set via `staticwebapp.config.json` `globalHeaders`):
+  `Content-Security-Policy` (default-src 'self'; no inline where avoidable — the app is
+  no-build so we can move to external JS + nonces), `Strict-Transport-Security`
+  (HSTS, preload), `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
+  `X-Frame-Options: DENY` / `frame-ancestors 'none'`, `Permissions-Policy` locking down
+  camera/mic/geo.
+- **Input validation** on every API body (allowlist fields, bound sizes, validate
+  `examId`/`qid`/answer shapes); reject unknown fields. Output is JSON only; no HTML
+  reflection. Parameterize all Table queries (no key injection via user input).
+- **Rate limiting (best-practice starting values — decision "5"):** per-user, per-route,
+  sliding window (enforced in the Function via a small `RateLimit` table or in-memory +
+  429 with `Retry-After`):
+  - `submit`: **10 / hour / user** (anti key-harvest — the sensitive one),
+  - `answer` (practice): **120 / hour / user**,
+  - `POST /attempts` (start): **30 / hour / user**,
+  - `PATCH` (save): **600 / hour / user** (autosave-friendly),
+  - `history` / `catalog`: **300 / hour / user**.
+  Tune after observing real usage; log all 429s.
+- **Idempotent, tamper-resistant scoring:** score only server-side against the stored
+  key; submit is idempotent; mock time is server-anchored (client clock is never trusted).
+- CSRF: SWA auth uses bearer principal header (not ambient cookies for the API), plus
+  `SameSite` cookies; state-changing routes are POST/PATCH only.
+
+### Observability & supply chain
+- **Audit log** of security events (grants/revokes, sign-ins, submits, 401/403/429,
+  admin actions) to **Application Insights** / a `Audit` table; retain per policy.
+- **Alerting** on anomalies (spikes in `submit`/`answer` per user = harvesting; auth
+  failures). Cost note: App Insights has a free data grant; keep sampling on.
+- **Supply chain:** minimal/zero runtime dependencies (the app is vanilla; the API uses
+  only the Azure SDK); enable **Dependabot** + **CodeQL** + **secret scanning** on the
+  repo; pin/lock versions; review the SWA deploy token scope.
+- **Least-privilege CI:** the GitHub Actions deploy uses the SWA deploy token as a repo
+  secret; the seed workflow uses a **separate** identity scoped to Storage only; protect
+  `main` with required checks + review.
+
+### Residual risk (unchanged from §11)
+Server-side scoring protects the *key*, not the *stems* — an authorized user can still
+screenshot questions or harvest keys slowly via `submit` (now rate-limited + logged +
+alerted). The control of last resort is **who is invited**. This is accepted and
+documented, not solved by technology.
 
 ---
 
