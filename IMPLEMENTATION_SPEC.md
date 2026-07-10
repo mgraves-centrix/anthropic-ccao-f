@@ -114,6 +114,32 @@ Parallelize aggressively **but never let two agents edit the same file at once.*
   at cutover, **retire the legacy `index.html`** (it exposes the answer key — the very thing the
   portal fixes). Keep it only as a content *source* under `data/ccao-f/`.
 
+## I.8 Model · reasoning-effort · temperature per role (assign the right engine)
+Assign every subagent the model/effort/temperature that fits its task. In the Workflow tool
+set `opts.model` + `opts.effort` per `agent()`; temperature is guidance for runners that expose
+it. Default to the most capable Claude for hard reasoning; drop tiers only for mechanical work.
+Models: **Opus 4.8** (`claude-opus-4-8`) · **Sonnet 5** (`claude-sonnet-5`) · **Haiku 4.5**
+(`claude-haiku-4-5-20251001`).
+
+| Role / task | Model | Effort | Temp | Why |
+|-------------|-------|--------|------|-----|
+| **Content-Author** (write items) | Opus 4.8 | high | ~0.6 | grounded creativity for stems/distractors |
+| **Content-Reviewer** (verify vs cited docs) | Opus 4.8 | xhigh | ~0.1 | precise, adversarial, closed-book re-solve |
+| **Auth-Engineer** | Opus 4.8 | high | ~0.2 | security-critical, deterministic |
+| **API-Engineer** (scoring, lifecycle, projection) | Opus 4.8 | high | ~0.2 | correctness + key-safety |
+| **Security-Reviewer** | Opus 4.8 | max | ~0.1 | adversarial red-team |
+| **Charts-Engineer** (SVG math, a11y, contrast) | Opus 4.8 | high | ~0.3 | precision + edge cases |
+| **Integrator** (merge/conflicts) | Opus 4.8 | high | ~0.1 | deterministic reconciliation |
+| **Frontend-Engineer** (views/components) | Sonnet 5 | medium–high | ~0.3 | solid UI at good value |
+| **Data-Engineer** (validator/seeder tooling) | Sonnet 5 | medium | ~0.2 | mechanical correctness |
+| **Test-Engineer** | Sonnet 5 (Opus for security tests) | high | ~0.2 | rigorous, deterministic |
+| **Scaffolder** (boilerplate/config) | Sonnet 5 (Haiku for pure boilerplate) | low–medium | ~0.2 | cheap, mechanical |
+| **Explore/discovery** (read-only sweeps) | Haiku 4.5 / Sonnet 5 | low–medium | ~0.3 | cheap breadth |
+
+Rule: **code correctness, security, verification, and integration → low temp + high/xhigh/max
+effort; item authoring → moderate temp for distractor variety, always followed by a low-temp
+verification pass; boilerplate → cheapest tier that passes the gate.**
+
 ---
 
 # PART II — LOCKED DECISIONS (authoritative; do not re-ask)
@@ -450,6 +476,36 @@ stopwatch (no penalty). Two-tab/device: ETag+`rev`; stale PATCH→409 with autho
 - **`seed-tables.mjs`:** upsert exams/questions/scenarios/studyguide into Table Storage
   (Azurite locally; MI in cloud via `seed.yml` workflow_dispatch).
 
+## III.10a Authoring standard — write as an expert Anthropic exam item-writer
+Every item is authored to **psychometric, certification-grade** quality. **Volume never lowers
+the bar:** all 300+ per exam (900+ total) pass **author → adversarial review → validator**. Each
+item must satisfy:
+- **Grounding:** traceable to (a) an **official Anthropic doc URL** and (b) a specific
+  **exam-guide objective**. Technical exams (CCDV-F, CCAR-F, CCAR-P) cite developer/platform docs
+  (Messages API, tool use, streaming, batch, prompt caching, extended thinking, Agent SDK, Claude
+  Code incl. CLAUDE.md/rules/hooks, MCP, `tool_choice`) — **never** the consumer Help Center.
+- **One defensible answer:** exactly one correct option (single) or an exact correct set
+  (multiple, stem states "select N"). A subject-matter expert would agree the key is correct and
+  the distractors are not. No "multiple defensible answers," no ambiguity.
+- **Distractors that teach:** plausible-but-wrong, targeting real misconceptions; in the guides'
+  style — **absolutes ("always/never")**, over-engineered/over-complex options, outdated-but-
+  tempting practices. Homogeneous length/grammar so nothing tells the key by shape.
+- **Clean stems:** self-contained, scenario-anchored where the exam is (CCAR-F always), ask one
+  thing; negatives only when necessary (bold **NOT**); no clues that answer another item.
+- **Right difficulty:** calibrated to a *minimally-qualified candidate*; test application/judgment
+  over trivia; no trick questions; no "all/none of the above" unless deliberate.
+- **Rationale:** explains why the key is right **and** why each distractor is wrong, citing the
+  doc. This is a teaching artifact, not a restatement.
+- **Integrity:** fresh items from public blueprint + docs; **never reproduce live exam content**;
+  label unofficial/illustrative. No duplicate/near-duplicate stems or answer patterns.
+- **Distribution:** hit each exam's blueprint weights; spread cognitive level (recall →
+  application → analysis) per domain; correct-answer position varied at authoring time (and
+  shuffled again at runtime).
+- **Adversarial review pass (Content-Reviewer, separate agent):** re-solve the item **closed-book**,
+  confirm the key against the **cited page** (not memory), flag ambiguity/second-defensible
+  answers/clueing/outdated facts, and **fix or reject**. Only review-passed items reach the
+  validator. Author moderate-temp for variety; review low-temp for precision (§I.8).
+
 ## III.11 CCAR-F scenarios (Content-Author, Phase 4) — verbatim frames to seed
 6 scenarios; author **60 items each (360 bank)**; mock draws **4×15=60**. Frames (store
 unabridged in `Scenarios.frame`; primary domains drive per-scenario skew):
@@ -525,11 +581,14 @@ recolor/re-domain per exam + all-exams overview; dark/light covers every surface
 test) + persists + OS default; reduced-motion renders final state; no overflow at 360px;
 verdict green/amber/red + weakest-domain deep links work; a11y (axe) passes.
 
-## Phase 4 — Content authoring  *(Content-Author ×N, Data-Engineer, Security-Reviewer)*
-Order **CCAR-F → CCDV-F → CCAR-P**. Per exam, per domain: fetch+read grounding docs → author
-to blueprint weights (single+multiple) → verification pass re-checking a sample vs cited pages
-→ uniqueness/distribution check → `validate.mjs` gate → seed. CCAR-F: 60/scenario (360), mock
-4×15. Study guides: per-domain grounded notes + feature-ref + Skilljar course links
+## Phase 4 — Content authoring  *(Content-Author ×N + Content-Reviewer, Data-Engineer)*
+Order **CCAR-F → CCDV-F → CCAR-P**. Author to the **expert item-writer standard (§III.10a)** and
+the **model/effort/temp assignments (§I.8)**: Content-Authors (Opus 4.8, high, ~0.6) and a
+**Content-Reviewer** (Opus 4.8, xhigh, ~0.1) who closed-book re-solves and verifies every item
+against its cited page. Per exam, per domain: fetch+read grounding docs → author to blueprint
+weights (single+multiple) → **adversarial review pass on every item** → uniqueness/distribution
+check → `validate.mjs` gate → seed. **≥300 unique/exam**; CCAR-F 60/scenario (360), mock 4×15.
+Study guides: per-domain grounded notes + feature-ref + Skilljar course links
 (catalog `anthropic.skilljar.com`; capture per-course URLs from a logged-in session).
 **Gate per exam bank:** validator green (schema/refs/dupes/weights/multi-response/scenario/
 sample re-verified); **≥300 unique items**; two consecutive attempts show different question

@@ -66,9 +66,15 @@ Phase N+1 starts without asking.
 
 ## 4 · SUBAGENT ROSTER (spawn by need; scale count to the work)
 Scaffolder · API-Engineer · Auth-Engineer · Frontend-Engineer · Charts-Engineer ·
-Data-Engineer · Content-Author(×N) · Security-Reviewer · Test-Engineer · Integrator.
-(Definitions in `IMPLEMENTATION_SPEC.md` §I.3.) For discovery/audits, fan out several
+Data-Engineer · Content-Author(×N) · Content-Reviewer · Security-Reviewer · Test-Engineer ·
+Integrator. (Definitions in `IMPLEMENTATION_SPEC.md` §I.3.) For discovery/audits, fan out several
 read-only agents on different angles and dedupe before acting.
+
+**Assign the right engine per task (spec §I.8):** set `opts.model`+`opts.effort` (temp as
+guidance). Opus 4.8 for security/scoring/verification/charts/integration (high–max effort, low
+temp); item authoring Opus 4.8 (high effort, ~0.6 temp) + a low-temp Opus reviewer pass; Sonnet
+5 for standard UI/tooling/tests; Haiku 4.5 for pure boilerplate + read-only sweeps. Never run
+security or scoring on a downgraded tier.
 
 ## 5 · EXECUTION ORDER (phase → exit gate; full detail in spec Part IV)
 - **Phase 0 — Scaffold:** repo tree, TS Functions v4, SPA shell, `staticwebapp.config.json`,
@@ -95,9 +101,11 @@ read-only agents on different angles and dedupe before acting.
   CCAR-F mock shows 4 grouped scenarios (re-draw varies); charts recolor/re-domain + all-exams
   overview; dark/light every surface (contrast test) + persists + OS default; reduced-motion →
   final state; no overflow at 360px; verdict + deep-linked study recs; axe a11y passes.
-- **Phase 4 — Content (order CCAR-F → CCDV-F → CCAR-P):** per domain: fetch/read grounding
-  docs → author to blueprint weights (single + multiple) → verification re-check vs cited pages
-  → uniqueness/distribution → `validate.mjs` → seed. CCAR-F: **60/scenario (360 bank), mock
+- **Phase 4 — Content (order CCAR-F → CCDV-F → CCAR-P):** author to the **expert Anthropic exam
+  item-writer standard (spec §III.10a)** — **volume never lowers quality.** Per domain: fetch/read
+  grounding docs → author to blueprint weights (single + multiple), doc-grounded with one
+  defensible key + teaching distractors → **per-item adversarial closed-book review vs the cited
+  page** → uniqueness/distribution → `validate.mjs` → seed. CCAR-F: **60/scenario (360 bank), mock
   4×15**. Study guides + Skilljar links.
   **Gate/exam:** validator green (schema/refs/dupes/weights/multi-response/scenario/sample
   re-verified); **≥300 unique items**; two consecutive attempts differ in question + option
