@@ -1,0 +1,162 @@
+[
+  {
+    "examId": "CCDV-F", "questionId": "D1-01", "domain": 1, "type": "single",
+    "stem": "A developer is building an agent that must decide which tool to call, observe the result, and iterate until a task is done. Which control pattern does the Claude Agent SDK use to drive this?",
+    "options": ["A single Messages API call with all steps hardcoded", "An agent loop that repeatedly calls the model, executes returned tool calls, and feeds results back until the model stops requesting tools", "A fixed finite-state machine defined entirely in JSON before the run", "A batch job that runs all tool calls in parallel without model feedback"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Agentic workflows run a loop: the model requests tool use, the harness executes the tool and returns the result as a tool_result, and the loop continues until the model responds without further tool_use. Options describing hardcoded or single-shot flows are not agentic.",
+    "referenceText": "Building agents with the Claude Agent SDK", "referenceUrl": "https://docs.claude.com/en/docs/agents-and-tools/agent-sdk/overview", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D1-02", "domain": 1, "type": "single",
+    "stem": "In a workflow that chains several model calls, which approach best improves reliability for a complex multi-step task?",
+    "options": ["Ask for everything in one prompt and accept the first output", "Decompose the task into discrete steps (prompt chaining), validating each step's output before the next", "Increase max_tokens and temperature to let the model explore", "Disable tool use so the model reasons freely"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Prompt chaining decomposes complex work into verifiable steps, improving reliability over a single monolithic prompt. Raising temperature or removing tools does not add reliability.",
+    "referenceText": "Chain complex prompts for stronger performance", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/chain-prompts", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-01", "domain": 2, "type": "single",
+    "stem": "Which field of a Messages API request carries top-level instructions about role and behavior that are not part of the conversation turns?",
+    "options": ["The first user message", "The system parameter", "A message with role \"system\"", "The metadata parameter"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "The Messages API takes a top-level system parameter for system instructions. There is no message with role \"system\"; messages alternate between user and assistant.",
+    "referenceText": "Messages API — system prompts", "referenceUrl": "https://docs.claude.com/en/api/messages", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-02", "domain": 2, "type": "single",
+    "stem": "A Messages API request omits max_tokens. What happens?",
+    "options": ["The request succeeds and generates until the model stops", "The request fails because max_tokens is required", "It defaults to the model's full context window", "It defaults to 1 token"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "max_tokens is a required parameter on the Messages API; it sets the maximum number of tokens to generate before stopping.",
+    "referenceText": "Messages API reference", "referenceUrl": "https://docs.claude.com/en/api/messages", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-03", "domain": 2, "type": "multiple",
+    "stem": "Which are valid, documented ways to reduce cost and/or latency for high-volume Claude API workloads? (Select TWO.)",
+    "options": ["Prompt caching to reuse large, stable prompt prefixes", "The Message Batches API for non-time-sensitive requests at reduced cost", "Sending each request twice and keeping the faster response", "Setting temperature to 0 to shorten outputs"],
+    "correct": [0, 1], "selectCount": 2,
+    "rationale": "Prompt caching reuses cached prefixes to cut cost and latency; the Message Batches API processes large asynchronous workloads at reduced cost. Duplicate requests waste spend, and temperature does not control output length.",
+    "referenceText": "Prompt caching; Message Batches API", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-04", "domain": 2, "type": "single",
+    "stem": "To receive tokens incrementally as they are generated rather than waiting for the full response, a developer should:",
+    "options": ["Set stream: true and consume the server-sent events", "Poll the Messages API repeatedly for partial output", "Use the Batches API", "Set max_tokens to a small value"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Setting stream: true streams the response as server-sent events (message_start, content_block_delta, etc.). Batching and polling do not provide incremental streaming.",
+    "referenceText": "Streaming Messages", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/streaming", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-05", "domain": 2, "type": "single",
+    "stem": "After a tool_use response, how must the developer continue the conversation so the model can finish the task?",
+    "options": ["Send a new user message containing a tool_result block referencing the tool_use id", "Start a fresh conversation with the tool output in the system prompt", "Call a separate /tools endpoint with the result", "Append the result to the assistant message and resend it"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "The developer executes the tool, then sends the result back as a user message containing a tool_result content block whose tool_use_id matches the model's tool_use block. The model then continues.",
+    "referenceText": "Tool use — returning results", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-06", "domain": 2, "type": "single",
+    "stem": "A team wants Claude to always return output that conforms to a specific JSON structure for a downstream system. Which is the most reliable documented technique?",
+    "options": ["Ask politely for JSON and hope it complies", "Define a tool with an input_schema and use tool use to force structured output", "Lower max_tokens so only JSON fits", "Set temperature to 2.0"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Defining a tool with a JSON input_schema (and optionally tool_choice) makes the model produce structured arguments matching the schema — the documented pattern for reliable structured output.",
+    "referenceText": "Tool use for structured output", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D3-01", "domain": 3, "type": "single",
+    "stem": "Which file lets a team check project-specific instructions and conventions into a repository so Claude Code applies them automatically?",
+    "options": ["package.json", "CLAUDE.md", "README.md", ".gitignore"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "CLAUDE.md holds project memory/instructions Claude Code loads automatically. README and package.json are not Claude Code configuration files.",
+    "referenceText": "Claude Code — memory & CLAUDE.md", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/memory", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D4-01", "domain": 4, "type": "single",
+    "stem": "When building an eval to measure whether prompt changes improve quality, what is the most important practice?",
+    "options": ["Test on a single hand-picked example that already works", "Use a representative test set with defined success criteria and compare versions against it", "Only measure token cost, not output quality", "Rely on a one-off manual read of the output"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Reliable evaluation uses a representative dataset and explicit, graded success criteria so prompt or model changes can be compared objectively. Single examples and vibes-based checks do not generalize.",
+    "referenceText": "Create strong empirical evaluations", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D5-01", "domain": 5, "type": "single",
+    "stem": "A workload needs the highest reasoning quality for complex agentic tasks and cost is secondary. Which model selection principle applies?",
+    "options": ["Always pick the smallest, cheapest model", "Choose the most capable model for the hardest tasks, and consider smaller models where they meet quality bars", "Model choice never affects quality, only price", "Pick a model at random and tune temperature"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Match the model to the task: use the most capable model where quality matters most, and use smaller/faster models when they meet the requirement to optimize cost and latency.",
+    "referenceText": "Choosing a model", "referenceUrl": "https://docs.claude.com/en/docs/about-claude/models/overview", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D5-02", "domain": 5, "type": "single",
+    "stem": "Which capability lets Claude spend additional internal reasoning on hard problems, controllable by a budget?",
+    "options": ["Extended thinking", "Prompt caching", "Streaming", "Stop sequences"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Extended thinking gives the model additional reasoning tokens (with a configurable budget) for complex tasks. Caching, streaming, and stop sequences serve other purposes.",
+    "referenceText": "Extended thinking", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/extended-thinking", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D6-01", "domain": 6, "type": "multiple",
+    "stem": "Which are documented prompt-engineering techniques for the Claude API? (Select THREE.)",
+    "options": ["Be clear and direct, stating task, audience, and format", "Provide examples (multishot) of the desired input/output", "Give Claude a role via the system prompt", "Use deliberately vague wording to keep prompts short"],
+    "correct": [0, 1, 2], "selectCount": 3,
+    "rationale": "Clear/direct instructions, multishot examples, and role prompting via the system prompt are all documented techniques. Vague wording degrades results.",
+    "referenceText": "Prompt engineering overview", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D6-02", "domain": 6, "type": "single",
+    "stem": "Placing large, stable reference material near the top of the prompt and reusing it across many requests pairs best with which feature to control cost?",
+    "options": ["Prompt caching", "Stop sequences", "Temperature", "Top-k sampling"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Stable prefixes (e.g., long documents or instructions) are ideal candidates for prompt caching, which reuses the cached prefix across requests to reduce cost and latency.",
+    "referenceText": "Prompt caching", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D7-01", "domain": 7, "type": "single",
+    "stem": "An application concatenates untrusted user text directly into instructions Claude will follow. What is the primary risk and mitigation?",
+    "options": ["No risk; user text is always safe", "Prompt injection; separate and clearly delimit untrusted content and constrain the model's actions/permissions", "Latency; enable streaming", "Cost; enable batching"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Injecting untrusted content into instructions enables prompt injection. Mitigations include clearly delimiting untrusted input, instructing the model how to treat it, and limiting tool permissions. Streaming and batching are unrelated.",
+    "referenceText": "Mitigate jailbreaks and prompt injections", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D8-01", "domain": 8, "type": "single",
+    "stem": "What is the Model Context Protocol (MCP)?",
+    "options": ["A proprietary Anthropic-only binary format", "An open protocol that standardizes how applications provide tools, resources, and context to LLMs via servers and clients", "A prompt template language", "A replacement for the Messages API"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "MCP is an open standard for connecting models to external tools, data, and context through MCP servers and clients. It is not proprietary, a template language, or an API replacement.",
+    "referenceText": "Model Context Protocol", "referenceUrl": "https://modelcontextprotocol.io/introduction", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D8-02", "domain": 8, "type": "multiple",
+    "stem": "Which primitives does an MCP server expose to clients? (Select THREE.)",
+    "options": ["Tools", "Resources", "Prompts", "Billing plans"],
+    "correct": [0, 1, 2], "selectCount": 3,
+    "rationale": "MCP servers expose tools (callable functions), resources (contextual data), and prompts (reusable templates). Billing is not an MCP primitive.",
+    "referenceText": "MCP server concepts", "referenceUrl": "https://modelcontextprotocol.io/docs/concepts/architecture", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-07", "domain": 2, "type": "single",
+    "stem": "Which stop_reason indicates the model paused specifically because it wants the developer to run a tool?",
+    "options": ["end_turn", "max_tokens", "tool_use", "stop_sequence"],
+    "correct": [2], "selectCount": 1,
+    "rationale": "A stop_reason of tool_use means the response contains one or more tool_use blocks and is waiting for tool results. end_turn is a natural completion; max_tokens and stop_sequence indicate other stops.",
+    "referenceText": "Messages API — stop_reason", "referenceUrl": "https://docs.claude.com/en/api/messages", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D2-08", "domain": 2, "type": "single",
+    "stem": "In the Messages API, conversation history must be provided as:",
+    "options": ["A single concatenated string", "A messages array alternating user and assistant roles", "Separate API calls per turn with no history", "The system parameter only"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "The Messages API takes a messages array of turns that alternate between user and assistant roles; prior turns are resent to maintain context.",
+    "referenceText": "Messages API", "referenceUrl": "https://docs.claude.com/en/api/messages", "status": "published"
+  },
+  {
+    "examId": "CCDV-F", "questionId": "D5-03", "domain": 5, "type": "single",
+    "stem": "A high-throughput classification job must minimize cost while meeting a modest quality bar. The best optimization is to:",
+    "options": ["Use the largest model regardless of need", "Select a smaller/faster model that meets the quality bar and validate with an eval", "Raise temperature to speed generation", "Disable safety guardrails"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Right-sizing to a smaller/faster model that passes an eval optimizes cost/latency without sacrificing the required quality. Oversizing wastes spend; temperature and guardrails are irrelevant to this trade-off.",
+    "referenceText": "Reducing latency & cost", "referenceUrl": "https://docs.claude.com/en/docs/about-claude/models/overview", "status": "published"
+  }
+]

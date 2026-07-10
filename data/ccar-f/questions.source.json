@@ -1,0 +1,146 @@
+[
+  {
+    "examId": "CCAR-F", "questionId": "S1-01", "domain": 1, "scenarioId": "S1", "type": "single",
+    "stem": "The support agent receives an ambiguous refund request it cannot confidently resolve within policy. What is the most appropriate orchestration decision?",
+    "options": ["Guess a resolution to preserve the first-contact-resolution metric", "Call escalate_to_human with the gathered context when confidence or policy coverage is insufficient", "Loop indefinitely calling lookup_order until certain", "Refuse to respond"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "A well-designed agent knows its limits: when confidence or policy coverage is insufficient it should escalate to a human with the context it has gathered, rather than guess (harming trust) or loop.",
+    "referenceText": "CCAR-F guide — Agentic Architecture & Orchestration", "referenceUrl": "https://docs.claude.com/en/docs/agents-and-tools/agent-sdk/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S1-02", "domain": 2, "scenarioId": "S1", "type": "single",
+    "stem": "Which is the best design for the process_refund MCP tool given it moves money?",
+    "options": ["Make it fire-and-forget with no confirmation", "Give it a precise input schema, require explicit parameters (order id, amount), and design it to be idempotent/confirmable so retries don't double-refund", "Let the model pass free-form text and parse it server-side", "Combine refund and escalation into one ambiguous tool"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Money-moving tools need a precise input_schema, explicit required parameters, and idempotency so retries or duplicate tool calls do not cause double refunds. Free-form input and merged responsibilities invite errors.",
+    "referenceText": "Tool use — defining tools", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S1-03", "domain": 5, "scenarioId": "S1", "type": "single",
+    "stem": "To keep the agent reliable across a long multi-turn dispute, which context-management practice helps most?",
+    "options": ["Send the entire raw chat and all tool outputs every turn with no structure", "Maintain concise, structured state (verified facts, order status, decisions) so key context persists without unbounded growth", "Clear all context each turn to save tokens", "Rely on the model to remember across separate API calls with no history"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Reliability comes from managing context deliberately: carry concise structured state forward rather than dumping everything (which risks context bloat and distraction) or discarding needed context.",
+    "referenceText": "CCAR-F guide — Context Management & Reliability", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/long-context-tips", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S2-01", "domain": 3, "scenarioId": "S2", "type": "single",
+    "stem": "For a large, risky refactor across many files, which Claude Code approach is most appropriate before making changes?",
+    "options": ["Direct execution immediately without review", "Use plan mode to produce and review a plan before Claude edits files", "Delete the files and regenerate from scratch", "Disable CLAUDE.md so there are no constraints"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Plan mode lets Claude Code propose a plan you review before it edits, which is appropriate for large/risky changes. Direct execution suits small, low-risk tasks.",
+    "referenceText": "Claude Code — plan mode & workflows", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S2-02", "domain": 3, "scenarioId": "S2", "type": "multiple",
+    "stem": "Which belong in a well-designed CLAUDE.md for the team's repository? (Select TWO.)",
+    "options": ["Project conventions, build/test commands, and architectural notes", "Reusable guidance Claude should apply consistently across the repo", "Secrets such as API keys and tokens", "A copy of the entire dependency source tree"],
+    "correct": [0, 1], "selectCount": 2,
+    "rationale": "CLAUDE.md should capture conventions, commands, and durable guidance Claude applies consistently. Secrets must never be committed, and vendoring all dependency source into it is inappropriate.",
+    "referenceText": "Claude Code — CLAUDE.md / memory", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/memory", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S2-03", "domain": 5, "scenarioId": "S2", "type": "single",
+    "stem": "During a long Claude Code session the context is filling with irrelevant history, degrading focus. What is the best reliability practice?",
+    "options": ["Keep appending everything indefinitely", "Curate context — clear or summarize stale content and provide only the files/scope relevant to the current task", "Randomly truncate the oldest half of the context", "Increase temperature to compensate"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Curating context (clearing/summarizing stale content, scoping to relevant files) preserves reliability. Indefinite growth and blind truncation both harm results.",
+    "referenceText": "CCAR-F guide — Context Management & Reliability", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S3-01", "domain": 1, "scenarioId": "S3", "type": "single",
+    "stem": "In the coordinator/subagent research system, what is the coordinator's primary architectural responsibility?",
+    "options": ["Doing all searching, analysis, and writing itself", "Decomposing the task, delegating to specialized subagents, and synthesizing their results", "Storing the final report in a database", "Replacing the need for any subagents"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "In an orchestrator/worker pattern the coordinator decomposes the task, delegates to specialized subagents, and integrates their outputs — the core of multi-agent orchestration.",
+    "referenceText": "CCAR-F guide — Agentic Architecture & Orchestration", "referenceUrl": "https://docs.claude.com/en/docs/agents-and-tools/agent-sdk/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S3-02", "domain": 5, "scenarioId": "S3", "type": "single",
+    "stem": "A search subagent fails on some queries. What should it return so the coordinator can proceed reliably?",
+    "options": ["A generic \"error\" string with no detail", "Structured error context: failure type, what was attempted, any partial results, and alternative approaches", "Nothing, and stop the whole run", "A hallucinated result to avoid reporting failure"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Returning structured error context (failure type, attempt, partial results, alternatives) lets the coordinator proceed and annotate coverage gaps. Generic errors, silent failure, or fabrication all reduce reliability.",
+    "referenceText": "CCAR-F guide — Context Management & Reliability", "referenceUrl": "https://docs.claude.com/en/docs/agents-and-tools/agent-sdk/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S3-03", "domain": 2, "scenarioId": "S3", "type": "single",
+    "stem": "The document-analysis subagent exposes tools to the coordinator. Which tool-design choice best supports composition?",
+    "options": ["One giant tool that does search, analysis, and formatting together", "Focused tools with clear names, precise input schemas, and structured outputs the coordinator can consume", "Tools that return unstructured prose only", "Tools with no descriptions to keep the schema small"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Composable multi-agent systems rely on focused, well-described tools with precise schemas and structured outputs. Overloaded or undocumented tools are hard for the model to use correctly.",
+    "referenceText": "Tool use — tool design", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S4-01", "domain": 3, "scenarioId": "S4", "type": "single",
+    "stem": "To help engineers explore an unfamiliar codebase, which built-in Claude Code tools are most directly useful?",
+    "options": ["Read, Grep, and Glob to locate and read relevant files", "Only Bash to run the app", "A web browser tool only", "None; the model should guess file contents"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Read, Grep, and Glob let the agent locate and read the right code, which is the foundation of codebase exploration. Guessing or relying solely on running the app is unreliable.",
+    "referenceText": "Claude Code — built-in tools", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S4-02", "domain": 2, "scenarioId": "S4", "type": "single",
+    "stem": "The productivity agent must reach an internal ticketing system. What is the appropriate integration mechanism?",
+    "options": ["Hardcode credentials into the prompt", "Expose the ticketing system through an MCP server providing well-scoped tools", "Ask the user to paste ticket data every time", "Fine-tune the model on the ticket database"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "An MCP server is the standard way to connect an agent to an external system through well-scoped tools/resources. Hardcoding secrets or manual pasting are poor designs, and fine-tuning is unnecessary here.",
+    "referenceText": "Model Context Protocol", "referenceUrl": "https://modelcontextprotocol.io/introduction", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S4-03", "domain": 1, "scenarioId": "S4", "type": "single",
+    "stem": "For automating a repetitive multi-step task, which agent design is most robust?",
+    "options": ["A single prompt that must get everything right at once", "An agent loop that plans, calls tools, checks results, and iterates until the task's success criteria are met", "Running all steps blindly in parallel with no verification", "Hardcoding outputs for every possible input"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "A verifying agent loop (plan → act → check → iterate against success criteria) is robust to variation. Single-shot prompts and unverified parallelism are brittle.",
+    "referenceText": "CCAR-F guide — Agentic Architecture & Orchestration", "referenceUrl": "https://docs.claude.com/en/docs/agents-and-tools/agent-sdk/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S5-01", "domain": 4, "scenarioId": "S5", "type": "single",
+    "stem": "The CI code-review bot produces too many false-positive comments. Which prompt-engineering change best reduces them?",
+    "options": ["Tell it to comment on everything it notices", "Give explicit criteria for what warrants a comment, ask it to report only high-confidence, actionable issues, and provide few-shot examples of good vs noise", "Raise temperature so it varies its output", "Remove all instructions and let it decide"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Defining clear criteria, requiring high-confidence actionable findings, and providing few-shot examples of signal vs noise directly reduces false positives. Broad instructions or higher temperature increase noise.",
+    "referenceText": "Prompt engineering — be clear and use examples", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S5-02", "domain": 3, "scenarioId": "S5", "type": "single",
+    "stem": "How is Claude Code best invoked inside a non-interactive CI/CD pipeline?",
+    "options": ["It cannot run in CI", "In headless/non-interactive mode driven by a command and prompt, with output consumed by the pipeline", "Only by a human typing into a terminal", "By committing prompts to the repo and waiting"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Claude Code supports headless/non-interactive execution suitable for CI, where it runs from a command/prompt and the pipeline consumes its output. It is not limited to interactive terminals.",
+    "referenceText": "Claude Code — CI / headless usage", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S5-03", "domain": 4, "scenarioId": "S5", "type": "single",
+    "stem": "To make generated test cases trustworthy, the prompt should ask Claude to:",
+    "options": ["Generate as many tests as possible regardless of relevance", "Ground tests in the actual code/spec, cover meaningful cases and edge cases, and avoid duplicating existing tests", "Only test the happy path", "Assert that all tests pass without running them"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Trustworthy test generation is grounded in the real code/spec, targets meaningful and edge cases, and avoids duplicates — not sheer volume or happy-path-only coverage.",
+    "referenceText": "Testing & evaluation guidance", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S6-01", "domain": 4, "scenarioId": "S6", "type": "single",
+    "stem": "To guarantee extracted records match a required JSON structure, the most reliable design is to:",
+    "options": ["Ask for JSON in prose and regex-parse the reply", "Define a tool with a JSON input_schema and use tool use so outputs conform to the schema, then validate against it", "Lower max_tokens until only JSON fits", "Trust the model to always emit valid JSON"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Structured output is most reliable when the schema is enforced via tool use and then validated. Prose-plus-regex and truncation are brittle, and blind trust fails on edge cases.",
+    "referenceText": "Tool use for structured output", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S6-02", "domain": 5, "scenarioId": "S6", "type": "single",
+    "stem": "Some source documents are messy and occasionally missing fields. Which approach best maintains accuracy and downstream reliability?",
+    "options": ["Force the model to invent values for missing fields", "Have the model output field-level confidence and mark missing/uncertain fields for review rather than fabricating", "Reject any document that isn't perfect", "Ignore validation to keep throughput high"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Emitting field-level confidence and flagging missing/uncertain values for review preserves accuracy and enables safe downstream use. Fabricating values or skipping validation harms reliability.",
+    "referenceText": "CCAR-F guide — Structured Output & Reliability", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/tool-use", "status": "published"
+  },
+  {
+    "examId": "CCAR-F", "questionId": "S6-03", "domain": 4, "scenarioId": "S6", "type": "single",
+    "stem": "Which prompt-engineering technique most improves extraction consistency on ambiguous formats?",
+    "options": ["Zero instructions", "A few targeted few-shot examples that demonstrate the desired parsing and output format", "Higher temperature", "A longer max_tokens only"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Few-shot examples that demonstrate the exact parsing and output format are a documented, effective way to improve consistency on ambiguous inputs.",
+    "referenceText": "Multishot (few-shot) prompting", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting", "status": "published"
+  }
+]

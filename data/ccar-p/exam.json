@@ -1,0 +1,16 @@
+{
+  "examId": "CCAR-P",
+  "name": "Claude Certified Architect – Professional",
+  "itemCount": 63, "timeLimitMin": 120, "cutScore": 720, "scaleMin": 100, "scaleMax": 1000,
+  "format": "standard", "price": 175, "status": "authoring",
+  "domains": [
+    { "id": 1, "name": "Solution Design & Architecture", "weight": 17 },
+    { "id": 2, "name": "Claude Models, Prompting & Context Engineering", "weight": 13 },
+    { "id": 3, "name": "Integration", "weight": 19 },
+    { "id": 4, "name": "Evaluation, Testing & Optimization", "weight": 16 },
+    { "id": 5, "name": "Governance, Safety & Risk Management", "weight": 14 },
+    { "id": 6, "name": "Stakeholder Communication & Lifecycle Management", "weight": 14 },
+    { "id": 7, "name": "Developer Productivity & Operational Enablement", "weight": 7 }
+  ],
+  "theme": { "accent": "#a21caf", "accentInk": "#86198f", "accentTint": "#fbe8fb", "accentDark": "#e879f9", "accentInkDark": "#f0abfc", "accentTintDark": "#2e1030", "onAccent": "#ffffff" }
+}

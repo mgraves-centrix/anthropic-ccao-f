@@ -1,0 +1,130 @@
+[
+  {
+    "examId": "CCAR-P", "questionId": "D1-01", "domain": 1, "type": "single",
+    "stem": "An architect must choose between fine-tuning and retrieval-augmented generation (RAG) so an assistant can answer from a large, frequently-updated internal knowledge base. Which is the better fit and why?",
+    "options": ["Fine-tuning, because it always beats RAG", "RAG, because it grounds answers in current, retrievable sources and updates without retraining", "Neither; put the whole knowledge base in every prompt permanently", "Fine-tuning, to avoid ever citing sources"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "RAG suits large, changing knowledge because content is retrieved at query time and can be updated without retraining, and answers can cite sources. Stuffing everything into every prompt is infeasible and costly.",
+    "referenceText": "Retrieval augmented generation guidance", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/embeddings", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D1-02", "domain": 1, "type": "multiple",
+    "stem": "Which are sound architectural practices for a production RAG system on Claude? (Select TWO.)",
+    "options": ["Chunk and index sources, retrieve the most relevant context per query, and pass it with the question", "Cache large stable instructions/context with prompt caching to cut cost and latency", "Send the entire corpus in every request", "Disable evaluation to ship faster"],
+    "correct": [0, 1], "selectCount": 2,
+    "rationale": "Effective RAG retrieves only relevant chunks per query; prompt caching reduces cost/latency for stable prefixes. Sending the whole corpus every time and skipping evals are anti-patterns.",
+    "referenceText": "Prompt caching; RAG patterns", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D2-01", "domain": 2, "type": "single",
+    "stem": "A complex analytical task needs the strongest reasoning available and can tolerate higher latency. The architect should:",
+    "options": ["Use the smallest model and raise temperature", "Select the most capable model and consider enabling extended thinking for the hardest steps", "Avoid the API and answer from training data", "Set max_tokens to 1"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Match the model to task difficulty: the most capable model, optionally with extended thinking, fits hard reasoning tasks where latency is acceptable.",
+    "referenceText": "Models overview; extended thinking", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/extended-thinking", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D2-02", "domain": 2, "type": "single",
+    "stem": "For a long-context workload with a large, stable system prompt reused across many calls, which technique most reduces cost and latency?",
+    "options": ["Prompt caching of the stable prefix", "Increasing temperature", "Sending fewer messages by dropping needed context", "Switching off streaming"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Prompt caching reuses the stable prefix across requests, cutting cost and latency without dropping needed context.",
+    "referenceText": "Prompt caching", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D3-01", "domain": 3, "type": "single",
+    "stem": "A high-volume, latency-tolerant nightly job scores millions of records. Which integration pattern is most cost-effective?",
+    "options": ["Synchronous real-time calls one at a time", "The Message Batches API for asynchronous bulk processing at reduced cost", "Streaming each request to a browser", "Fine-tuning a model per record"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Large asynchronous workloads that tolerate delay are the ideal use of the Message Batches API, which processes them at reduced cost.",
+    "referenceText": "Message Batches API", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/batch-processing", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D3-02", "domain": 3, "type": "single",
+    "stem": "An enterprise wants to run Claude within its existing AWS data boundary. Which integration option supports this?",
+    "options": ["Claude is only available via the first-party API", "Claude models available through Amazon Bedrock (and Google Vertex AI) let teams deploy within their cloud environment", "The model must be downloaded and self-hosted on-prem", "There is no enterprise deployment option"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Claude is offered through Amazon Bedrock and Google Vertex AI in addition to the first-party API, enabling deployment within a team's existing cloud/governance boundary.",
+    "referenceText": "Claude on Bedrock / Vertex", "referenceUrl": "https://docs.claude.com/en/api/claude-on-amazon-bedrock", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D4-01", "domain": 4, "type": "single",
+    "stem": "Before and after a prompt/model change in production, the most rigorous way to know if quality improved is to:",
+    "options": ["Read a few outputs and decide by feel", "Run an evaluation on a representative, versioned test set with graded criteria and compare scores", "Ship and wait for complaints", "Compare only token costs"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "A representative, versioned eval with graded criteria provides objective before/after comparison. Anecdotes, complaint-driven QA, and cost-only comparisons don't measure quality.",
+    "referenceText": "Develop empirical evaluations", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D4-02", "domain": 4, "type": "single",
+    "stem": "Which is an appropriate use of an LLM-as-judge in an evaluation pipeline?",
+    "options": ["Replacing all human review permanently with no calibration", "Scoring outputs against an explicit rubric to scale grading, calibrated against human labels", "Grading with no criteria at all", "Judging with the same prompt that generated the output, unreviewed"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "LLM-as-judge scales grading when driven by an explicit rubric and calibrated against human labels. It should not run rubric-free or entirely uncalibrated.",
+    "referenceText": "Evaluation — grading methods", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D5-01", "domain": 5, "type": "multiple",
+    "stem": "For a solution handling regulated personal and health data (e.g., GDPR/HIPAA), which governance practices are appropriate? (Select TWO.)",
+    "options": ["Minimize and control what sensitive data is sent, and choose a deployment/data-handling posture that meets compliance requirements", "Maintain human oversight and audit logging for consequential decisions", "Send all raw PII to the model by default for convenience", "Disable logging entirely so nothing is traceable"],
+    "correct": [0, 1], "selectCount": 2,
+    "rationale": "Data minimization, a compliant deployment posture, human oversight, and audit trails are core governance controls for regulated data. Defaulting to sending all PII or removing traceability violates governance.",
+    "referenceText": "Anthropic trust, safety & compliance", "referenceUrl": "https://docs.claude.com/en/docs/about-claude/usage-policies", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D5-02", "domain": 5, "type": "single",
+    "stem": "An untrusted-input feature could be targeted by prompt injection to misuse tools. Which mitigation set is most appropriate?",
+    "options": ["Trust all input and grant the agent broad permissions", "Delimit and treat untrusted content as data, constrain tool permissions to least privilege, and add guardrails/monitoring", "Only increase max_tokens", "Rely solely on the model refusing"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Defense-in-depth against injection: isolate untrusted content, apply least-privilege tool permissions, and add guardrails and monitoring. Broad trust or relying solely on refusals is insufficient.",
+    "referenceText": "Mitigate jailbreaks & prompt injection", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D6-01", "domain": 6, "type": "single",
+    "stem": "When presenting a Claude solution's readiness to non-technical executives, the most effective communication focuses on:",
+    "options": ["Raw benchmark token counts only", "Business outcomes, risks and mitigations, evaluation results, and cost/rollout plan in stakeholder-relevant terms", "Low-level API parameters", "A promise that the system is perfect"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Executive communication should translate technical work into outcomes, risks/mitigations, evidence (evals), and a cost/rollout plan — not raw parameters or overpromises.",
+    "referenceText": "CCAR-P guide — Stakeholder Communication", "referenceUrl": "https://docs.claude.com/en/docs/intro-to-claude", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D6-02", "domain": 6, "type": "single",
+    "stem": "Which lifecycle practice best sustains quality after launch as usage and content evolve?",
+    "options": ["Freeze the prompt and never revisit it", "Continuously monitor outputs and costs, re-run evals on changes, and iterate with versioned prompts/content", "Rely on the initial launch tests indefinitely", "Remove monitoring once it works once"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Ongoing monitoring, regression evals on changes, and versioned iteration keep a deployed system healthy as inputs drift. Freezing or dropping monitoring lets quality decay silently.",
+    "referenceText": "CCAR-P guide — Lifecycle Management", "referenceUrl": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D7-01", "domain": 7, "type": "single",
+    "stem": "To improve developer productivity and operational enablement across teams adopting Claude, an effective step is to:",
+    "options": ["Let every team reinvent prompts and tooling independently", "Provide shared, reusable assets (prompt libraries, evals, MCP servers, CLAUDE.md conventions) and enablement docs", "Restrict access so only one person can build", "Prohibit evaluation to move faster"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Operational enablement scales through shared reusable assets and documented conventions, reducing duplication and raising baseline quality. Siloing or banning evals hurts productivity and reliability.",
+    "referenceText": "CCAR-P guide — Developer Productivity & Enablement", "referenceUrl": "https://docs.claude.com/en/docs/claude-code/overview", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D1-03", "domain": 1, "type": "single",
+    "stem": "A design must degrade gracefully if the model or a tool is temporarily unavailable. Which architectural practice supports this?",
+    "options": ["Assume every call always succeeds", "Add timeouts, retries with backoff, fallbacks, and structured error handling around model and tool calls", "Remove all error handling to simplify code", "Cache nothing and retry infinitely with no limit"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "Resilient architectures use timeouts, bounded retries with backoff, fallbacks, and structured error handling. Assuming success or unbounded retries creates fragility and cascading failures.",
+    "referenceText": "CCAR-P guide — Solution Design & Reliability", "referenceUrl": "https://docs.claude.com/en/api/errors", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D3-03", "domain": 3, "type": "single",
+    "stem": "An integration must call Claude and several internal systems as tools. Which approach keeps the integration maintainable and standardized?",
+    "options": ["Bespoke one-off glue code per system with no shared contract", "Expose internal systems via MCP servers with well-scoped tools/resources the agent can reuse", "Embed each system's credentials in the prompt", "Fine-tune a model per internal system"],
+    "correct": [1], "selectCount": 1,
+    "rationale": "MCP provides a standardized way to expose internal systems as reusable tools/resources, improving maintainability over bespoke glue or credential-in-prompt hacks.",
+    "referenceText": "Model Context Protocol", "referenceUrl": "https://modelcontextprotocol.io/introduction", "status": "published"
+  },
+  {
+    "examId": "CCAR-P", "questionId": "D4-03", "domain": 4, "type": "single",
+    "stem": "Latency in a user-facing feature is too high. Which optimization is most likely to help without lowering answer quality?",
+    "options": ["Prompt caching stable prefixes and right-sizing the model to the task, validated by an eval", "Raising temperature", "Removing all system instructions", "Always using the largest model for every request"],
+    "correct": [0], "selectCount": 1,
+    "rationale": "Caching stable prefixes and choosing an appropriately sized model (verified by eval) reduce latency while holding quality. Temperature doesn't reduce latency, stripping instructions harms quality, and always maxing model size raises latency/cost.",
+    "referenceText": "Reduce latency & cost", "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching", "status": "published"
+  }
+]

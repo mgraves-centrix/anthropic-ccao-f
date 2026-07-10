@@ -1,0 +1,17 @@
+{
+  "examId": "CCDV-F",
+  "name": "Claude Certified Developer – Foundations",
+  "itemCount": 53, "timeLimitMin": 120, "cutScore": 720, "scaleMin": 100, "scaleMax": 1000,
+  "format": "standard", "price": 125, "status": "authoring",
+  "domains": [
+    { "id": 1, "name": "Agents & Workflows", "weight": 14.7 },
+    { "id": 2, "name": "Applications & Integration", "weight": 33.1 },
+    { "id": 3, "name": "Claude Code", "weight": 3.1 },
+    { "id": 4, "name": "Eval, Testing & Debugging", "weight": 2.6 },
+    { "id": 5, "name": "Model Selection & Optimization", "weight": 16.8 },
+    { "id": 6, "name": "Prompt & Context Engineering", "weight": 11.0 },
+    { "id": 7, "name": "Security & Safety", "weight": 8.1 },
+    { "id": 8, "name": "Tools & MCPs", "weight": 10.6 }
+  ],
+  "theme": { "accent": "#0e7490", "accentInk": "#155e75", "accentTint": "#e0f2f7", "accentDark": "#38bdf8", "accentInkDark": "#7dd3fc", "accentTintDark": "#0e2a30", "onAccent": "#ffffff" }
+}
