@@ -248,7 +248,7 @@ Common: all routes (except `/login`, `/.auth/*`) require role `authorized`; serv
     creates/updates their own `AuthorizedUsers` row `status="pending"` from the principal
     (`email`,`displayName` server-derived) + `{ justification? }`. **Domain auto-approve:** if
     the **verified** principal email's domain (lowercased, after the final `@`) exact-matches
-    `AUTO_APPROVE_DOMAINS` (**`majorkeytech.com`, `centrixlabs.com`**), set
+    `AUTO_APPROVE_DOMAINS` (**`majorkeytech.com`, `centrixlabs.com`, `identityfabric.ai`**), set
     `status="active", role="authorized"` immediately; else `pending`. Idempotent; audited;
     rate-limited. Returns `{ status }`.
   - **`GET /api/access-requests?status=pending`** — **`admin` only** → list requests.
@@ -330,7 +330,7 @@ Goal: users onboard themselves; admins approve — **no hand-composed invites**.
 4. **Result** — approved users re-enter authorized; deny/offboard = set `denied` / delete row.
    Every transition is written to `Audit`.
 - **Admin view** is a small SPA panel gated by the `admin` role (lists pending, Approve/Deny).
-- **Config:** `AUTO_APPROVE_DOMAINS=majorkeytech.com,centrixlabs.com` (case-insensitive match
+- **Config:** `AUTO_APPROVE_DOMAINS=majorkeytech.com,centrixlabs.com,identityfabric.ai` (case-insensitive match
   on the email's domain), optional notification target (email/webhook).
 - **Auto-approve safety (security-team rule):** only auto-approve when the email is a
   **verified claim from the Entra B2B principal** (`x-ms-client-principal`), never a
@@ -516,7 +516,7 @@ sample re-verified); ≥200 unique items; study guide renders with working links
 3. **Entra app registration (primary):** single-tenant; redirect URI = SWA
    `/.auth/login/<provider>/callback`; client secret → **Key Vault**; app settings
    (`AAD_CLIENT_ID`, `AAD_CLIENT_SECRET` ref, `TENANT_ID`, `AUTHZ_MODE=allowlist`,
-   `AUTO_APPROVE_DOMAINS=majorkeytech.com,centrixlabs.com`).
+   `AUTO_APPROVE_DOMAINS=majorkeytech.com,centrixlabs.com,identityfabric.ai`).
 4. **Self-service registration (the "easy" onboarding):** Entra → External Identities → enable
    **self-service sign-up** and confirm **Email one-time passcode for guests = enabled** so new
    users authenticate via an emailed code with **no pre-sent invite**; the guest object is
