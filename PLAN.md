@@ -785,8 +785,9 @@ course mapping (§8).
 1. **Per-course Skilljar deep-links** — the `all-courses` page blocks automated fetch
    (403); the exact URLs must be copied from a logged-in browser session during
    authoring. Confirm you want the full set captured then, or give me the links.
-2. **Multi-response scoring rule** — confirm multiple-response items are all-or-nothing
-   (matches CCAO-F today) vs partial credit. Affects `acc` and per-domain %.
+2. ~~Multi-response scoring rule~~ **RESOLVED** — the CCAR-F guide (§10) documents no
+   partial credit, so multiple-response is **all-or-nothing** (selected set must equal the
+   key set exactly). Locked in `IMPLEMENTATION_SPEC.md`.
 3. **CCAR-F per-scenario domain mix** — each scenario skews to its guide-stated primary
    domains; confirm you're fine letting the 360-bank hit the D1–D5 weights *in aggregate*
    (mock sampling then approximates blueprint) rather than forcing every scenario to
