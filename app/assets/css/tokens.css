@@ -1,0 +1,62 @@
+/* ============================================================================
+   Design tokens (spec §14). Semantic tokens (theme-dependent, exam-independent)
+   + per-exam accent tokens applied via body[data-exam]. Light default; dark via
+   prefers-color-scheme; [data-theme] overrides win over the media query.
+   ============================================================================ */
+:root {
+  --ink: #191b21;
+  --ink-2: #3b4049;
+  --muted: #6b717a;
+  --bg: #eef0ee;
+  --surface: #ffffff;
+  --surface-2: #f7f8f7;
+  --line: #e0e2de;
+  --line-strong: #c9ccc6;
+
+  /* semantic answer/score colors — stay constant across exams */
+  --correct: #17925a;  --correct-tint: #e4f3eb;
+  --amber:   #b07a00;  --amber-tint:   #f7efd8;
+  --wrong:   #ce3a32;  --wrong-tint:   #fbe9e7;
+  --focus:   #3b44d9;
+
+  /* default accent (overridden per exam) */
+  --accent: #3b44d9; --accent-ink: #2a31a8; --accent-tint: #ececfb; --on-accent: #ffffff;
+
+  --font-display: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --r: 6px; --r-sm: 4px; --maxw: 1080px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e9ebef; --ink-2: #c3c7cf; --muted: #969ba4;
+    --bg: #14161a; --surface: #1c1f25; --surface-2: #23272e;
+    --line: #2e333b; --line-strong: #3c424c;
+    --correct: #35c07f; --correct-tint: #123024;
+    --amber: #d8a531; --amber-tint: #322810;
+    --wrong: #f0685f; --wrong-tint: #351a18;
+    --focus: #8b93ff;
+    --accent: #8b93ff; --accent-ink: #b6bbff; --accent-tint: #23253a; --on-accent: #10121a;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #e9ebef; --ink-2: #c3c7cf; --muted: #969ba4;
+  --bg: #14161a; --surface: #1c1f25; --surface-2: #23272e;
+  --line: #2e333b; --line-strong: #3c424c;
+  --correct: #35c07f; --correct-tint: #123024;
+  --amber: #d8a531; --amber-tint: #322810;
+  --wrong: #f0685f; --wrong-tint: #351a18;
+  --focus: #8b93ff;
+  --accent: #8b93ff; --accent-ink: #b6bbff; --accent-tint: #23253a; --on-accent: #10121a;
+}
+
+/* Per-exam accents (spec §14). Light values; dark handled by the *_dark vars in JS. */
+body[data-exam="CCAO-F"] { --accent: #3b44d9; --accent-ink: #2a31a8; --accent-tint: #ececfb; }
+body[data-exam="CCDV-F"] { --accent: #0e7490; --accent-ink: #155e75; --accent-tint: #e0f2f7; }
+body[data-exam="CCAR-F"] { --accent: #6d28d9; --accent-ink: #5b21b6; --accent-tint: #efe9fd; }
+body[data-exam="CCAR-P"] { --accent: #a21caf; --accent-ink: #86198f; --accent-tint: #fbe8fb; }
+
+:root[data-theme="dark"] body[data-exam="CCAO-F"],
+body[data-exam="CCAO-F"] { }

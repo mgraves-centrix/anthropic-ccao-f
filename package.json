@@ -1,0 +1,22 @@
+{
+  "name": "cert-portal",
+  "private": true,
+  "type": "module",
+  "description": "Anthropic Certification Study Portal — app + api",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:api": "tsc -p api/tsconfig.json",
+    "gate": "npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.3.0",
+    "@azure/identity": "^4.5.0"
+  }
+}

@@ -1,0 +1,48 @@
+/* Base layout + components (Phase 3 expands). CSP-safe: external only. */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; font-family: var(--font-body); color: var(--ink);
+  background: var(--bg); line-height: 1.5;
+}
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 8px; top: 8px; background: var(--surface); padding: .5rem; z-index: 10; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1rem; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.brand { font-family: var(--font-display); font-weight: 600; }
+.brand__mark { color: var(--accent); }
+.topbar__right { display: flex; align-items: center; gap: .75rem; }
+.iconbtn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: var(--r-sm); padding: .3rem .5rem; cursor: pointer; font-size: 1rem;
+}
+.userchip { font-size: .85rem; color: var(--muted); }
+.main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1rem; }
+.foot { max-width: var(--maxw); margin: 0 auto; padding: 1rem; color: var(--muted); }
+.mono { font-family: var(--font-mono); font-size: .78rem; }
+.loading { color: var(--muted); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 1rem 1.15rem;
+}
+.pill {
+  display: inline-block; font-family: var(--font-mono); font-size: .72rem;
+  padding: .2rem .55rem; border-radius: 999px; background: var(--accent);
+  color: var(--on-accent);
+}
+.btn {
+  cursor: pointer; font: inherit; font-weight: 500; padding: .5rem .9rem;
+  border-radius: var(--r-sm); border: 1px solid var(--line-strong);
+  background: var(--surface); color: var(--ink);
+}
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
