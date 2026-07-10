@@ -79,6 +79,41 @@ registration** + external-collaboration/guest config; set SWA app settings & Key
 add GitHub Actions secrets. Agents produce the exact runbook + IaC and proceed against
 emulators.
 
+## I.6 Parallelization & file-ownership (parallel dev, zero collisions)
+Parallelize aggressively **but never let two agents edit the same file at once.** Enforce:
+- **Interface-first, then fan out.** Before parallel work in a phase, ONE agent authors and
+  **freezes the shared contracts** — `api/src/shared/types.ts` (DTOs), the Table schema, API
+  request/response shapes, and `app/assets/css/tokens.css` (theme tokens). Everyone else
+  imports these read-only. Contract changes after freeze go **only through the Integrator**.
+- **Disjoint ownership lanes.** Each subagent is assigned a **non-overlapping path set** and
+  touches nothing outside it. The codebase is structured so most work is naturally one-file-
+  per-unit:
+  - API: **one file per function** (`api/src/functions/*.ts`) — parallelize by endpoint.
+  - Frontend: **one file per view/component** (`app/assets/js/views/*.js`, `components/*.js`).
+  - Charts: `app/assets/js/charts/*` (Charts-Engineer only).
+  - Data/content: `data/tools/*` (Data-Engineer); `data/<exam>/*` (one Content-Author per exam;
+    within an exam, one file per domain → authors don't collide even inside a bank).
+- **Contention files have a single named owner** (edits serialized through that owner or the
+  Integrator): `staticwebapp.config.json` (Auth-Engineer) · `app|api/package.json` + lockfiles
+  (Scaffolder; batch dependency adds) · `tokens.css` (Frontend-Engineer) · CI workflows,
+  `host.json`, `tsconfig.json` (Scaffolder) · test config (Test-Engineer) · `shared/types.ts`
+  (frozen; Integrator-only after freeze).
+- **Worktree isolation.** Every file-mutating subagent runs in its **own git worktree**; it
+  declares its file set up front. The **Integrator** merges worktrees, resolves any shared-file
+  conflicts, and only then runs the phase gate. No direct concurrent writes to the main tree.
+- **Rule of thumb:** if two tasks would touch the same file, either split the file first
+  (extract a module) or sequence them under one owner — do **not** run them in parallel.
+
+## I.7 Coexistence & cutover (protect the live page)
+- **All build work stays on `claude/deployment-capability-rfm02p`; never push to `main`.**
+  Production keeps serving today's `index.html` untouched.
+- **Validate on the SWA PR preview environment** (separate URL, access-gated) — not production.
+- The branch restructures into `app/`+`api/` and points the SWA workflow at them; because this
+  only lands on the branch, production is unaffected until you choose to merge.
+- **Cutover = merge to `main` (human-gated)** once gates are green and cloud/Entra are provisioned;
+  at cutover, **retire the legacy `index.html`** (it exposes the answer key — the very thing the
+  portal fixes). Keep it only as a content *source* under `data/ccao-f/`.
+
 ---
 
 # PART II — LOCKED DECISIONS (authoritative; do not re-ask)
