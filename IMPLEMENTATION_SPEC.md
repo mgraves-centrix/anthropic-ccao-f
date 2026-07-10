@@ -134,7 +134,8 @@ Parallelize aggressively **but never let two agents edit the same file at once.*
 | Cleanup | Incomplete attempts **auto-clear after 3 days** — lazy on-read **and** a scheduled timer sweep (BYO Functions). |
 | Exams | 4: **CCAO-F** (built, migrate), **CCDV-F**, **CCAR-F** (scenario), **CCAR-P**. All 120 min / 720 cut / 100–1000 / 12-mo validity. |
 | CCAR-F | **60 items authored per scenario → 360 bank**; mock draws **4 of 6 scenarios × 15 items**; questions grouped under scenario frames. |
-| Content targets | 200+ unique grounded questions + full study guide per exam; authoring order **CCAR-F → CCDV-F → CCAR-P**. |
+| Content targets | **300+ unique grounded questions** + full study guide **per exam** (CCAR-F: 60/scenario = 360); authoring order **CCAR-F → CCDV-F → CCAR-P**. Large pool ≫ per-exam item count → low attempt-to-attempt overlap. |
+| Randomization | **Per attempt, server-side, recorded for resume:** shuffle **question order AND option order** every attempt so position is never memorable; blueprint-weighted **fresh random sample** from the 300+ bank each mock. CCAR-F: shuffle **scenario order + question order within each scenario**, never scatter a scenario's questions. Shuffling never affects scoring (all-or-nothing set compare). |
 | Charts | Hand-rolled SVG; per-exam accent; 7/30-day window; per-exam & all-exams scope; dark-mode + reduced-motion + a11y + responsive ≥360px. |
 | Results UX | **Green/amber/red** verdict (pass≥760 green, 720–759 amber, <720 red) + weakest-domain **study recommendations** (weak×weight ranked, deep-linked). |
 | Dark mode | First-class; CSS tokens; per-user persisted; defaults to `prefers-color-scheme`. |
@@ -254,7 +255,10 @@ interface AttemptRow {
   byDomain?: Record<string, {c:number; t:number}>;               // byDomainJson
   progress?: {                                                    // progressJson (in-progress)
     currentIndex:number; answers:Record<string,number[]>; flags:string[];
-    optionOrder:Record<string,number[]>; scenarioPick?:string[]; practiceElapsedMs?:number;
+    questionOrder:string[];                     // shuffled qid sequence (per-attempt)
+    optionOrder:Record<string,number[]>;        // shuffled option indices per qid
+    scenarioPick?:string[];                     // CCAR-F: shuffled scenario order
+    practiceElapsedMs?:number;
   };
   rev: number; purgeAt: string;   // startedAt + 3d
 }
@@ -294,9 +298,12 @@ Common: all routes (except `/login`, `/.auth/*`) require role `authorized`; serv
 - **`POST /api/attempts`** — `{ examId, mode, filters?:{domains?:number[],count?:number} }`
   → `{ attemptId, mode, expiresAt?, serverNow, scenarios?:{id,title,frame}[],
        questions:{qid,stem,options,type,domain,scenarioId?,selectCount?}[] }`
-  — server shuffles options (records order), sets timers, CCAR-F mock picks 4-of-6.
+  — server draws a fresh blueprint-weighted random sample from the 300+ bank, **shuffles
+  question order and each item's options** (records both orders for stable resume), sets timers;
+  CCAR-F mock picks 4-of-6 scenarios, shuffles scenario order + question order within each
+  (grouping preserved).
   **No key fields.**
-- **`PATCH /api/attempts/{attemptId}`** — `{ rev, currentIndex, answers, flags, optionOrder, practiceElapsedMs? }`
+- **`PATCH /api/attempts/{attemptId}`** — `{ rev, currentIndex, answers, flags, questionOrder, optionOrder, practiceElapsedMs? }`
   → `{ ok, rev, savedAt, serverNow, expiresAt? }` (409 on stale rev → returns authoritative
   state, still keyless). **No correctness.**
 - **`POST /api/attempts/{attemptId}/answer`** — **Practice only** — `{ qid, answer:number[] }`
@@ -307,7 +314,7 @@ Common: all routes (except `/login`, `/.auth/*`) require role `authorized`; serv
      review:{qid,yourAnswer,correct,correctKeys,rationale,reference}[] }`. **Only key-bearing
   endpoint besides practice `answer`.**
 - **`GET /api/attempts?examId=&status=in-progress`** → resume payload (position, answers,
-  flags, optionOrder, scenarioPick; mock `remainingMs=expiresAt-serverNow`, or auto-submit
+  flags, questionOrder, optionOrder, scenarioPick; mock `remainingMs=expiresAt-serverNow`, or auto-submit
   if expired). No keys for in-progress.
 - **`GET /api/me/history?scope=exam|all&examId=&window=7|30`** →
   `{ scope, examId?, window, cutScore, points:{date,scaled,pass,examId}[],
@@ -525,7 +532,8 @@ to blueprint weights (single+multiple) → verification pass re-checking a sampl
 4×15. Study guides: per-domain grounded notes + feature-ref + Skilljar course links
 (catalog `anthropic.skilljar.com`; capture per-course URLs from a logged-in session).
 **Gate per exam bank:** validator green (schema/refs/dupes/weights/multi-response/scenario/
-sample re-verified); ≥200 unique items; study guide renders with working links; e2e mock runs.
+sample re-verified); **≥300 unique items**; two consecutive attempts show different question
+order + option order (randomization test); study guide renders with working links; e2e mock runs.
 
 ---
 

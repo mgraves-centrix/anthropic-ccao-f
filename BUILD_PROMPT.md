@@ -100,12 +100,15 @@ read-only agents on different angles and dedupe before acting.
   → uniqueness/distribution → `validate.mjs` → seed. CCAR-F: **60/scenario (360 bank), mock
   4×15**. Study guides + Skilljar links.
   **Gate/exam:** validator green (schema/refs/dupes/weights/multi-response/scenario/sample
-  re-verified); ≥200 unique items; study guide renders with working links; e2e mock runs.
+  re-verified); **≥300 unique items**; two consecutive attempts differ in question + option
+  order; study guide renders with working links; e2e mock runs.
 
 ## 6 · ALWAYS-ON QUALITY BARS (any violation = red gate)
 Answer key never in a non-`submit`/`answer` payload (automated grep gate) · per-user data
 isolation, no all-users endpoint · CSP/HSTS/nosniff/frame-ancestors headers, no inline JS ·
-rate limits enforced (submit 10/h the tightest) · multi-select all-or-nothing · mock timer
+rate limits enforced (submit 10/h the tightest) · multi-select all-or-nothing · **per-attempt
+random question + option order (recorded for resume), fresh blueprint sample from 300+ bank;
+CCAR-F keeps scenarios grouped** · mock timer
 server-anchored + auto-submit · dark + light AA on every surface · reduced-motion renders final
 state · responsive ≥360px no h-scroll · role="img"+aria on charts · managed identity in IaC
 (no storage secret) · audit on auth/grant/submit events · minimal deps + scanning on.
@@ -115,7 +118,9 @@ state · responsive ≥360px no h-scroll · role="img"+aria on charts · managed
   scale 100–1000 · 12-mo validity.
 - **Scoring:** `scaled = clamp(round(100 + accuracy*900), 100, 1000)`; verdict green ≥760 /
   amber 720–759 / red <720; mastery threshold 70%; multi-response **all-or-nothing**.
-- **CCAR-F:** 60 items × 6 scenarios = 360 bank; mock draws 4 scenarios × 15.
+- **Content:** **300+ unique grounded questions per exam** (CCAR-F 60×6=360); per attempt
+  **shuffle question + option order** (recorded for resume) + fresh blueprint sample.
+- **CCAR-F:** 60 items × 6 scenarios = 360 bank; mock draws 4 scenarios × 15 (grouped).
 - **Hosting:** Azure SWA **Standard** (`app/`+`api/`), Functions v4 (Node/TS), Table Storage,
   **managed identity** in cloud.
 - **Auth:** **Entra B2B primary** (email OTP / self-service sign-up, MFA/Conditional Access) +

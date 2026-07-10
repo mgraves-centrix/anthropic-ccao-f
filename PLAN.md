@@ -356,9 +356,11 @@ No questions, no keys.
 
 ### `POST /api/attempts` — start Practice or Mock
 Req: `{ examId, mode, filters?:{ domains?:[int], count?:int } }`
-Server: creates an `in-progress` attempt, picks + **shuffles** options (records
-`optionOrder`), sets `startedAt`/`expiresAt` (mock), and for CCAR-F **mock** selects 4
-of 6 scenarios.
+Server: creates an `in-progress` attempt, draws a fresh blueprint-weighted random sample
+from the 300+ bank, **shuffles question order and options** per attempt (records
+`questionOrder` + `optionOrder` for stable resume), sets `startedAt`/`expiresAt` (mock), and
+for CCAR-F **mock** selects 4 of 6 scenarios (shuffles scenario order + within-scenario order,
+grouping preserved).
 Resp:
 ```json
 {
@@ -517,7 +519,7 @@ sample questions whose keys are deliberately non-secret — but that is not in s
 
 ---
 
-## 8. Content-authoring workflow (CCDV-F, CCAR-F, CCAR-P → 200+ each + study guides)
+## 8. Content-authoring workflow (CCDV-F, CCAR-F, CCAR-P → 300+ each + study guides)
 
 Authoring is **data-only** — it never touches app code. Each exam is a self-contained
 workstream producing `data/<exam>/questions.source.json` + `studyguide.source.json`,
@@ -551,7 +553,7 @@ Write the 6 scenario frames into the `Scenarios` table (verbatim from the guide)
 author **60 questions per scenario** (mix of single + multiple-response), skewed to that
 scenario's primary domains. The **mock** draws **4 of 6 scenarios and samples 15 items
 each = 60**, grouped and presented under their frames. Practice can filter by scenario
-and/or domain. This 360-item bank comfortably exceeds the 200+ target and gives strong
+and/or domain. This 360-item bank comfortably exceeds the 300+ target and gives strong
 per-scenario variety across mock attempts.
 
 The 6 scenario frames (from the CCAR-F exam guide — reproduce these as the `frame` text):
@@ -593,7 +595,7 @@ domain weights within tolerance · multiple-response present · a re-verified an
 sample matches its cited sources.` Implemented as `data/tools/validate.mjs` (CI check).
 
 **Recommended order & rough effort** (S/M/L per *domain-cluster of work*; a full
-200+ bank + guide is a multi-session effort per exam):
+300+ bank + guide is a larger multi-session effort per exam):
 1. **CCAR-F first** (your call) — **L.** Establishes the scenario pipeline end-to-end;
    6 scenario frames + grouped items across 5 domains. Highest structural novelty.
 2. **CCDV-F** — **M–L.** Largest reusable doc-reading investment (platform/API/MCP/Claude
