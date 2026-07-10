@@ -36,6 +36,14 @@ export class AzureTableRepo implements TableRepo {
     return new AzureTableRepo(client);
   }
 
+  async ensureTable(): Promise<void> {
+    try {
+      await this.client.createTable();
+    } catch (e: unknown) {
+      if ((e as { statusCode?: number }).statusCode !== 409) throw e;
+    }
+  }
+
   async upsert(entity: Entity): Promise<void> {
     await this.client.upsertEntity(entity, "Replace");
   }

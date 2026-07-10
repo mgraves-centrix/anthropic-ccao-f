@@ -1,0 +1,464 @@
+{
+  "title": "CCAO-F Study Guide",
+  "subtitle": "Claude Certified Associate – Foundations",
+  "sections": [
+    {
+      "id": "glance",
+      "label": "Exam at a glance",
+      "kind": "facts",
+      "items": [
+        [
+          "Exam code",
+          "CCAO-F"
+        ],
+        [
+          "Items",
+          "60 (multiple-choice + multiple-response)"
+        ],
+        [
+          "Time limit",
+          "120 minutes"
+        ],
+        [
+          "Passing score",
+          "720 on a 100–1,000 scale"
+        ],
+        [
+          "Delivery",
+          "Proctored — online or Pearson VUE test center"
+        ],
+        [
+          "Fee",
+          "$99 USD per attempt"
+        ],
+        [
+          "Validity",
+          "12 months from award date"
+        ],
+        [
+          "Result",
+          "Pass/fail + scaled score, plus percent-correct by domain"
+        ]
+      ]
+    },
+    {
+      "id": "how-to-use",
+      "label": "How to use this guide",
+      "kind": "prose",
+      "body": [
+        "This guide goes beyond the official exam blueprint: each domain below adds reference-grounded detail drawn from Anthropic's live documentation, with links so you can read the source. Pair it with the practice questions — answers tagged “Docs” link to the exact Help Center page that backs them.",
+        "Fastest path to ready: skim the domain notes, take the free Anthropic Academy courses listed near the end (start with Claude 101 and AI Fluency), then drill with Practice and a full Mock exam. Aim for roughly 80% in practice before you sit the real thing — the 720 cut is about 69%, so give yourself margin.",
+        "Everything here is an independent study aid built from public documentation; it is not affiliated with or endorsed by Anthropic, and the sample questions are illustrative, not from the live exam."
+      ]
+    },
+    {
+      "id": "scoring",
+      "label": "How scoring works",
+      "kind": "prose",
+      "body": [
+        "The exam is criterion-referenced: you're measured against a fixed standard set by subject-matter experts, not against other candidates. You pass by demonstrating the blueprint knowledge, not by beating a percentage of peers.",
+        "Your total scaled score (100–1,000) determines pass/fail; the cut is 720. The per-domain percent-correct on your report is diagnostic only — it shows where you were strong or weak but does not decide your result.",
+        "Practical takeaway: don't fixate on any single domain during the exam — every scored item counts toward the same total. In this app, the calibration bar estimates readiness from your practice accuracy; it's a study aid, not the official scaling."
+      ]
+    },
+    {
+      "id": "d1",
+      "label": "Domain 1 · Prompting and Task Execution",
+      "kind": "domain",
+      "weight": 14,
+      "overview": "Write effective prompts, decompose complex requests, iterate to improve quality, and adapt your approach to the task type.",
+      "keyPoints": [
+        "Be clear and direct: the docs say to treat Claude like a brilliant new colleague with no context — state the task, audience, format, tone, and length explicitly. Golden rule: if a colleague with minimal context would be confused by your prompt, so will Claude.",
+        "Give examples (multishot): one good input–output example steers format and style better than a pile of adjectives.",
+        "Assign a role/persona (in the prompt or Project instructions) to set the right perspective, vocabulary, and level of detail — it shapes tone, not factual accuracy.",
+        "Decompose and chain: break a complex goal into ordered steps you can check; ask Claude to reason step by step for multi-step problems.",
+        "Reduce hallucinations by explicitly allowing “I don't know” and asking Claude to flag uncertainty.",
+        "Prefer positive instructions (“use a professional, courteous tone”) over stacking “don't” rules; be specific about length and format (“5 bullets, each under 15 words”).",
+        "Don't over-engineer — longer prompts aren't automatically better; iterate on the first draft. Capture repeated work as a reusable template, and note that prompts largely carry across model upgrades.",
+        "Stuck starting? The Claude Console has a prompt generator to draft a first prompt."
+      ],
+      "watchFor": "The “best prompt” answer is almost always the most specific one that supplies context and constraints. Reusable templates beat re-writing instructions each time.",
+      "refs": [
+        [
+          "Be clear, direct, and detailed",
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+        ],
+        [
+          "Prompt engineering overview",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+        ]
+      ]
+    },
+    {
+      "id": "d2",
+      "label": "Domain 2 · Output Evaluation and Validation",
+      "kind": "domain",
+      "weight": 21,
+      "overview": "The largest domain. Evaluate outputs for accuracy and completeness, spot hallucinations, inconsistencies, and bias, validate claims, and decide when human review is required.",
+      "keyPoints": [
+        "Verify before you trust: fluent, confident, well-structured output is not evidence of correctness — check specific claims, figures, and citations against authoritative sources.",
+        "Hallucination = confident, plausible-sounding content that is fabricated or unsupported (invented citations, quotes, statistics). Self-reported confidence and answer length are not accuracy signals.",
+        "The Research feature returns easy-to-check citations so you can trace each claim to its source — still verify anything high-stakes.",
+        "File-creation outputs (Excel formulas, reports, decks) are a strong starting point, but the docs say to review formulas, data, and sensitive content before sharing.",
+        "Match the need to the problem type: accuracy (wrong), completeness (missing required parts), consistency (self-contradiction), and bias (unfair assumptions) are distinct.",
+        "Human review scales with stakes: legal, medical, financial, external, or regulated outputs need verification regardless of polish.",
+        "Choose the output format for how it'll be consumed: an Artifact for substantial, reusable, editable deliverables (Claude makes one for self-contained content, typically over 15 lines); inline for quick replies; a downloadable file for polished .docx/.xlsx/.pptx/.pdf.",
+        "Curate rather than paste raw output: select, verify, and organize the relevant, accurate points."
+      ],
+      "watchFor": "When an answer sounds authoritative and cites something specific, that is exactly when to verify. Confidence is a style, not a fact-check.",
+      "refs": [
+        [
+          "Use research on Claude",
+          "https://support.claude.com/en/articles/11088861-use-research-on-claude"
+        ],
+        [
+          "Create and edit files with Claude",
+          "https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude"
+        ],
+        [
+          "What are artifacts?",
+          "https://support.claude.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them"
+        ],
+        [
+          "Web search vs. extended thinking vs. research",
+          "https://support.claude.com/en/articles/11095361-when-should-i-use-web-search-extended-thinking-and-research"
+        ]
+      ]
+    },
+    {
+      "id": "d3",
+      "label": "Domain 3 · Product and Model Selection",
+      "kind": "domain",
+      "weight": 12,
+      "overview": "Select the right product feature and model tier, aligning to cost, speed, and quality, and manage context and memory.",
+      "keyPoints": [
+        "Match model to task and cost: the usage-credits guidance says to use the efficient Haiku model or the most recent Sonnet for most (and high-volume) work, reserving Opus for genuinely complex reasoning. Your plan sets usage limits, not which model you can pick.",
+        "Projects are self-contained workspaces with shared instructions + a knowledge base; free users can create up to five, and paid plans scale large knowledge via RAG (up to ~10x) as it nears context limits.",
+        "Research (paid plans) runs multiple web + internal searches into a cited report and requires web search to be turned on.",
+        "Choose the retrieval tool: web search for current/changing facts; extended thinking for complex reasoning; Research for comprehensive, multi-source reports (roughly five or more tool calls).",
+        "Context is finite — distinguish usage limits (quantity over time; session limit resets every five hours) from length limits (one conversation). Hit a length limit → start a new chat or use a Project (RAG loads only relevant content).",
+        "Memory from chat history is available on all plans; searching past chats is paid-only and uses RAG; each Project has its own separate memory.",
+        "Code execution & file creation (all plans) produces real .xlsx/.docx/.pptx/.pdf files (30MB/file) in a sandbox, and also powers artifacts and Skills."
+      ],
+      "watchFor": "“Always use the top model” and “always use the cheapest” are both wrong. The right answer matches the tier to the task's real demands.",
+      "refs": [
+        [
+          "What are projects?",
+          "https://support.claude.com/en/articles/9517075-what-are-projects"
+        ],
+        [
+          "Use research on Claude",
+          "https://support.claude.com/en/articles/11088861-use-research-on-claude"
+        ],
+        [
+          "Usage and length limits",
+          "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work"
+        ],
+        [
+          "Chat search and memory",
+          "https://support.claude.com/en/articles/11817273-use-claude-s-chat-search-and-memory-to-build-on-previous-context"
+        ],
+        [
+          "Manage usage credits (model efficiency)",
+          "https://support.claude.com/en/articles/12429409-manage-usage-credits-for-paid-claude-plans"
+        ]
+      ]
+    },
+    {
+      "id": "d4",
+      "label": "Domain 4 · Workflow Integration and Solution Design",
+      "kind": "domain",
+      "weight": 16,
+      "overview": "Analyze requirements and use cases, use Claude for research/planning/optimization, support design and iteration, integrate into workflows, and communicate value and limits to stakeholders.",
+      "keyPoints": [
+        "Start from requirements and the use case: inputs, outputs, and success criteria — before choosing tools.",
+        "Map the current process; target high-value, lower-risk steps; preserve (or replace) controls that catch costly errors instead of automating them away.",
+        "Keep a human checkpoint before consequential actions. A concrete documented example: the Gmail connector lets Claude draft emails with context but cannot send them — a person sends the draft.",
+        "Use Research to gather multi-source, cited input for plans and proposals, and combine it with extended thinking to plan the approach and then execute.",
+        "Standardize recurring team deliverables with Skills so everyone gets consistent, expert-level results; ground a recurring initiative's context in a Project.",
+        "Communicate realistic benefits alongside limitations and required oversight; never promise zero errors or full replacement.",
+        "Know the associate scope boundary: escalate custom API integration and enterprise-scale agentic system design to Claude Architects/Developers."
+      ],
+      "watchFor": "Associate scope = translate business needs into effective Claude use and know when to escalate. Building against APIs or designing agentic systems is out of scope.",
+      "refs": [
+        [
+          "Google Workspace connectors (draft vs. send)",
+          "https://support.claude.com/en/articles/10166901-use-google-workspace-connectors"
+        ],
+        [
+          "Use research on Claude",
+          "https://support.claude.com/en/articles/11088861-use-research-on-claude"
+        ],
+        [
+          "What are skills?",
+          "https://support.claude.com/en/articles/12512176-what-are-skills"
+        ],
+        [
+          "What are projects?",
+          "https://support.claude.com/en/articles/9517075-what-are-projects"
+        ]
+      ]
+    },
+    {
+      "id": "d5",
+      "label": "Domain 5 · Configuration and Knowledge Management",
+      "kind": "domain",
+      "weight": 12,
+      "overview": "Configure Projects with instructions and knowledge sources, manage connectors, write good system-level instructions, and keep configurations current.",
+      "keyPoints": [
+        "Project instructions are inherited by every chat — keep them to role, general context, and key guidelines, and put task-specifics in the chat. The project name and description are informational and are not seen by Claude.",
+        "Project knowledge grounds responses in your team's current, approved documents; update or replace files when policy changes, and remove unused files to preserve context.",
+        "Connectors (Gmail, Calendar, Drive) are available to all users; on Team/Enterprise an Owner or Primary Owner must enable them org-wide first. Claude mirrors your existing permissions, pulls only what you ask for, and reads Drive files as text content only (no images/comments).",
+        "Enable Code execution & file creation in Settings > Capabilities (Free/Pro/Max) or Organization settings (Team/Enterprise) — it also powers artifacts and Skills.",
+        "Skills are folders with a SKILL.md that load on demand via progressive disclosure (keeping context lean); built-in Office/PDF skills auto-invoke, org owners can provision skills, and custom skills are private unless shared.",
+        "For code-execution security, network egress can be off, package-managers-only, or allowlisted domains — “off” is the most secure baseline (new Enterprise orgs default to off)."
+      ],
+      "watchFor": "When a Project misbehaves, check the instructions first — is the rule stated clearly and not contradicted?",
+      "refs": [
+        [
+          "What are projects?",
+          "https://support.claude.com/en/articles/9517075-what-are-projects"
+        ],
+        [
+          "Create and manage projects",
+          "https://support.claude.com/en/articles/9519177-how-can-i-create-and-manage-projects"
+        ],
+        [
+          "Google Workspace connectors",
+          "https://support.claude.com/en/articles/10166901-use-google-workspace-connectors"
+        ],
+        [
+          "Use skills in Claude",
+          "https://support.claude.com/en/articles/12512180-use-skills-in-claude"
+        ],
+        [
+          "Create and edit files (capabilities + network)",
+          "https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude"
+        ]
+      ]
+    },
+    {
+      "id": "d6",
+      "label": "Domain 6 · Governance, Risk, and Responsible Use",
+      "kind": "domain",
+      "weight": 15,
+      "overview": "Identify appropriate vs. inappropriate use cases, apply data-sensitivity/privacy/regulatory considerations, follow organizational AI policy, and weigh ethical implications.",
+      "keyPoints": [
+        "Handle sensitive data by policy: anonymize or redact regulated identifiers (PII, health, financial) and third-party-confidential information before use; data classified “restricted” → decline or escalate.",
+        "Consumer training is opt-in: the “Help improve Claude” toggle in Privacy Settings controls whether your chats train future models, and turning it off is forward-looking (it can't pull back data already in a training run). Flagged conversations may still be used for safety even if you opt out.",
+        "Team, Enterprise, and API data isn't used for training by default; Gmail/Drive/Calendar connector data isn't used for training unless you copy it into the chat; incognito chats are never used for training.",
+        "Thumbs up/down feedback stores the entire related conversation for up to five years.",
+        "Incognito chat (ghost icon, outside projects) isn't saved to history or memory; on Team/Enterprise it's retained at least 30 days for safety and appears in organizational exports and the Compliance API.",
+        "Keep a human accountable for decisions about people and watch for bias; don't present unverified output as authoritative legal, medical, or tax advice; be appropriately transparent about AI use; follow the org's AI policy and escalate when a use case is unclear.",
+        "Code execution can give Claude limited internet access — monitor chats with sensitive data, or disable network egress to prevent data leaving the sandbox."
+      ],
+      "watchFor": "The safe answer usually enables the task responsibly (anonymize, get clearance, escalate) rather than either uploading as-is or abandoning it entirely.",
+      "refs": [
+        [
+          "Is my data used for model training?",
+          "https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training"
+        ],
+        [
+          "Model improvement privacy settings",
+          "https://privacy.claude.com/en/articles/12109829-how-do-i-change-my-model-improvement-privacy-settings"
+        ],
+        [
+          "Use incognito chats",
+          "https://support.claude.com/en/articles/12260368-use-incognito-chats"
+        ],
+        [
+          "Connectors (privacy & data handling)",
+          "https://support.claude.com/en/articles/10166901-use-google-workspace-connectors"
+        ]
+      ]
+    },
+    {
+      "id": "d7",
+      "label": "Domain 7 · Troubleshooting and Optimization",
+      "kind": "domain",
+      "weight": 10,
+      "overview": "Diagnose and fix underperforming prompts and poor outputs, adjust based on feedback, and optimize workflows for efficiency and effectiveness.",
+      "keyPoints": [
+        "Off-target output? Diagnose the prompt first: clarify the goal, add missing context, specify format, give an example, or decompose the task — before switching tools.",
+        "Dropped sections → enumerate every required part or split into steps. A format that's sometimes ignored → confirm the rule is stated clearly and not contradicted elsewhere.",
+        "Long or drifting conversation → summarize the essentials and restart, or move the work into a Project (RAG loads only relevant context). A length limit → new chat or projects.",
+        "Research not digging in? Confirm web search is on and Research is active — or prompt “Claude, please use the research tool to…”",
+        "No files or artifacts appearing? Enable Code execution & file creation in Settings > Capabilities.",
+        "Google connector erroring (“you may need to reconnect”) → Customize > Connectors, disconnect, then re-authenticate on next use.",
+        "Too slow or costly at volume → route routine, high-volume steps to Haiku or the most recent Sonnet and reserve Opus for the hard steps. Optimize with evidence, one variable at a time, and capture what works as a reusable template or Skill."
+      ],
+      "watchFor": "Repeating the identical prompt or declaring the task impossible are never the right troubleshooting answer.",
+      "refs": [
+        [
+          "Prompt engineering overview",
+          "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview"
+        ],
+        [
+          "Usage and length limits",
+          "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work"
+        ],
+        [
+          "Use research on Claude",
+          "https://support.claude.com/en/articles/11088861-use-research-on-claude"
+        ],
+        [
+          "Google Workspace connectors (reconnect)",
+          "https://support.claude.com/en/articles/10166901-use-google-workspace-connectors"
+        ]
+      ]
+    },
+    {
+      "id": "features",
+      "label": "Claude feature reference (from the docs)",
+      "kind": "reference",
+      "intro": "Verified facts for the features the prep section names. The Docs-tagged practice questions are written against these pages.",
+      "groups": [
+        {
+          "feature": "Projects",
+          "facts": [
+            "Self-contained workspaces with their own chat history and knowledge base; available on all plans (free users: up to five projects).",
+            "Project instructions are inherited by every chat in the project; the name and description are informational and not seen by Claude.",
+            "Knowledge-base files are available across all chats in the project; on paid plans, enhanced project knowledge scales large content via RAG (up to ~10x).",
+            "Each project has its own scoped memory; contexts don't bleed across projects or into global memory. Team/Enterprise can share projects (can-use vs. can-edit)."
+          ]
+        },
+        {
+          "feature": "Artifacts",
+          "facts": [
+            "Created when content is significant, self-contained (typically over 15 lines), and likely to be edited, reused, or referred back to outside the chat.",
+            "Require Code execution and file creation to be enabled — the same capability that powers Word/Excel/PowerPoint/PDF creation.",
+            "Render in a side window and support a version selector; Markdown supports in-place ‘Edit with Claude’; your edits don't change Claude's memory of the original.",
+            "AI-powered artifacts run on each user's own subscription (no API keys, free to share) — don't publish confidential information."
+          ]
+        },
+        {
+          "feature": "Code execution & file creation",
+          "facts": [
+            "Available to all plans (Free–Enterprise); creates .xlsx, .pptx, .docx, and .pdf files you can download or save to Google Drive.",
+            "Runs code in a private, sandboxed computing environment; maximum file size is 30MB per file (uploads and downloads).",
+            "Enabled in Settings > Capabilities (Free/Pro/Max) or Organization settings (Team/Enterprise). New Enterprise orgs default to network egress off.",
+            "Network egress options: off (most secure), package-managers-only, or allowlisted domains. Review generated formulas, data, and sensitive content before sharing."
+          ]
+        },
+        {
+          "feature": "Memory & incognito",
+          "facts": [
+            "Memory from chat history is available on all plans; searching past chats is paid-only, uses RAG, and shows as a tool call. The memory summary refreshes about every 24 hours.",
+            "Global memory synthesis excludes chats inside projects; deleting a conversation removes it from memory.",
+            "Incognito chat (ghost icon, outside projects only) isn't saved to history or memory and can't be reopened.",
+            "On Team/Enterprise, incognito chats are retained at least 30 days for safety and appear in organizational exports and the Compliance API."
+          ]
+        },
+        {
+          "feature": "Skills",
+          "facts": [
+            "Folders with a SKILL.md, loaded on demand via progressive disclosure (keeps context lean); require code execution.",
+            "Built-in Anthropic skills (Excel, Word, PowerPoint, PDF) are invoked automatically when relevant; custom skills are private unless shared.",
+            "A skill's description determines when it activates — a vague description is why a skill ‘won't fire’. Org owners can provision skills org-wide.",
+            "MCP provides access to external tools/data; Skills provide the procedure for a task. Custom instructions are broad; Skills are task-specific."
+          ]
+        },
+        {
+          "feature": "Research, web search & extended thinking",
+          "facts": [
+            "Research (paid plans) runs multiple, building searches across the web and your connected Gmail/Calendar/Docs, producing a longer cited report; it requires web search to be on.",
+            "Use web search for current/changing facts; extended thinking for complex reasoning; Research for multi-source reports (~5+ tool calls).",
+            "Research runs agentically and can work in the background; if it answers shallowly, prompt it to ‘use the research tool’.",
+            "Research draws on the same usage limits and can consume them faster."
+          ]
+        },
+        {
+          "feature": "Connectors (Google Workspace)",
+          "facts": [
+            "Gmail, Calendar, and Drive connectors are available to all users; on Team/Enterprise an Owner must enable them org-wide first.",
+            "Claude mirrors your existing permissions, accesses data only when you ask, and reads Drive files as text content only (no images/comments).",
+            "Gmail: search, read, and draft — but Claude cannot send email. Every action requires your approval.",
+            "Anthropic doesn't train on connector data (unless you copy it into the chat); retrieved data is stored with the chat and deleted when you delete the chat."
+          ]
+        },
+        {
+          "feature": "Plans & usage limits",
+          "facts": [
+            "Pro is $20/month with at least 5x the free per-session usage; the session limit resets every five hours, with a separate weekly limit.",
+            "Team supports up to 150 seats (minimum five); Standard seats get 1.25x Pro per-session usage, Premium seats 6.25x; limits are per-member, not pooled.",
+            "Team includes centralized admin/billing, SSO and role-based access, and workplace connectors; go to Enterprise beyond 150 seats.",
+            "Usage limits = quantity over time; length limits = how long one conversation can get. Paid plans can enable usage credits to continue at standard API rates."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "courses",
+      "label": "Training courses (Anthropic Academy)",
+      "kind": "courses",
+      "intro": "Anthropic's official courses are free and hosted on Skilljar (Anthropic Academy). For CCAO-F, take them roughly in this order — Claude 101 and AI Fluency cover the most exam ground.",
+      "items": [
+        [
+          "Claude 101",
+          "https://anthropic.skilljar.com/claude-101",
+          "Start here. Everyday work tasks and core features (chats, file uploads, Projects) — foundational for every domain."
+        ],
+        [
+          "AI Fluency: Framework & Foundations",
+          "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+          "Collaborate with AI effectively, efficiently, ethically, and safely — maps to D1 (prompting), D2 (evaluation), and D6 (responsible use)."
+        ],
+        [
+          "AI Capabilities and Limitations",
+          "https://anthropic.skilljar.com/ai-capabilities-and-limitations",
+          "How AI works and where it fails — supports D2 (hallucinations/validation) and D6."
+        ],
+        [
+          "Introduction to Claude Cowork",
+          "https://anthropic.skilljar.com/introduction-to-claude-cowork",
+          "Task loop, file and research workflows, plugins and skills — supports D3/D4/D5."
+        ],
+        [
+          "Introduction to agent skills",
+          "https://anthropic.skilljar.com/introduction-to-agent-skills",
+          "Build, configure, and share Skills — supports D5 (configuration & knowledge management)."
+        ],
+        [
+          "Browse all Anthropic courses",
+          "https://anthropic.skilljar.com/",
+          "Full catalog on Skilljar (also API, MCP, and Claude Code courses for deeper/adjacent topics)."
+        ],
+        [
+          "Anthropic Academy (learning hub)",
+          "https://www.anthropic.com/learn",
+          "Landing page for Anthropic's learning resources and course paths."
+        ],
+        [
+          "CCAO-F certification & registration",
+          "https://anthropic-partners.skilljar.com/claude-certified-associate-foundations-certification",
+          "Official exam page (Anthropic Partner Network / Partner Academy) — exam guide, policies, and registration."
+        ]
+      ]
+    },
+    {
+      "id": "strategy",
+      "label": "Test-taking strategy",
+      "kind": "prose",
+      "body": [
+        "Read the stem for the decision it asks for — usually ‘the most appropriate action.’ Many options are true-ish; pick the one that best fits responsible, effective practice.",
+        "Watch for absolute distractors: ‘always,’ ‘never,’ ‘send as-is,’ ‘no review.’ They're usually wrong. Balanced answers that verify, anonymize, escalate, or match the tool to the task are usually right.",
+        "Multiple-response items tell you how many to select — select exactly that many.",
+        "Eliminate the two clearly-wrong options first, then choose between the remaining two on which is safer and more effective.",
+        "With 60 items in 120 minutes you have ~2 minutes each — flag hard ones and move on, then return."
+      ]
+    },
+    {
+      "id": "logistics",
+      "label": "Exam-day logistics",
+      "kind": "prose",
+      "body": [
+        "Register through the Anthropic Partner Network / Partner Academy; the exam is delivered by Pearson VUE (online-proctored or test center).",
+        "Bring valid, unexpired, government-issued photo ID whose name matches your registration exactly.",
+        "You may cancel or reschedule up to 24 hours before; changes inside 24 hours forfeit the fee.",
+        "Keep your workspace clear — no phones, smart watches, headphones, notes, or secondary monitors. You must stay in view of the webcam if testing online.",
+        "Retakes: 14 days after a first fail, 30 after a second, 90 after a third; up to four attempts per rolling 12 months, fee each time.",
+        "You accept a confidentiality/NDA before starting; exam content is confidential and must not be disclosed."
+      ]
+    }
+  ]
+}
