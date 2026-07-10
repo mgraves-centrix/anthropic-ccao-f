@@ -3,7 +3,7 @@
 // principal + input, returns DTOs. Azure Function files are thin adapters over
 // these. The answer key is read ONLY in practiceAnswer + submitAttempt.
 // ============================================================================
-import type { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo } from "./repos.js";
+import type { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo, StudyGuideRepo } from "./repos.js";
 import type {
   ExamMeta, QuestionRow, QuestionPublic, AttemptRow, SubmitResult, AccessStatus, Role,
 } from "./types.js";
@@ -21,7 +21,7 @@ export class ServiceError extends Error {
 
 export interface Ctx {
   exams: ExamsRepo; questions: QuestionsRepo; scenarios: ScenariosRepo;
-  attempts: AttemptsRepo; users: UsersRepo;
+  attempts: AttemptsRepo; users: UsersRepo; study: StudyGuideRepo;
 }
 export interface Opts { now?: number; rand?: () => number; }
 
@@ -84,6 +84,11 @@ function requireAdmin(p: ClientPrincipal) {
 // ---- Catalog ---------------------------------------------------------------
 export async function catalog(ctx: Ctx): Promise<ExamMeta[]> {
   return (await ctx.exams.list()).filter((e) => e.status !== "authoring" || true);
+}
+
+// ---- Study guide (no key material; safe to serve) --------------------------
+export async function studyGuide(ctx: Ctx, examId: string): Promise<unknown> {
+  return (await ctx.study.get(examId)) ?? null;
 }
 
 // ---- Create attempt (spec §III.4 POST /attempts) ---------------------------

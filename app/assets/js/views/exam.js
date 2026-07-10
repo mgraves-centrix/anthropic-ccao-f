@@ -34,6 +34,24 @@ export async function renderExam(el, route) {
   return renderHome(body, exam);
 }
 
+async function renderStudy(body, exam) {
+  body.innerHTML = `<div class="card"><p class="loading">Loading study guide…</p></div>`;
+  let guide = null;
+  try { guide = await api.study(exam.examId); } catch { /* none yet */ }
+  if (!guide || !guide.sections) {
+    body.innerHTML =
+      `<div class="card"><h3>Study guide</h3><p class="muted">Reference-grounded notes per domain — authored per exam.</p>` +
+      `<ul class="weights">` + exam.domains.map((d) =>
+        `<li id="study-domain-${d.id}"><span>${esc(d.name)}</span><span class="mono">${d.weight}%</span></li>`).join("") +
+      `</ul></div>`;
+    return;
+  }
+  body.innerHTML =
+    (guide.title ? `<h2>${esc(guide.title)}</h2>` : "") +
+    (guide.subtitle ? `<p class="muted">${esc(guide.subtitle)}</p>` : "") +
+    guide.sections.map(renderSection).join("");
+}
+
 async function renderHome(body, exam) {
   const hist = await api.history("exam", exam.examId, 30).catch(() => null);
   const latest = hist?.points?.length ? hist.points[hist.points.length - 1] : null;
@@ -51,13 +69,24 @@ async function renderHome(body, exam) {
     b.addEventListener("click", () => go(`#/exam/${encodeURIComponent(exam.examId)}/${b.dataset.go}`)));
 }
 
-function renderStudy(body, exam) {
-  body.innerHTML =
-    `<div class="card"><h3>Study guide</h3>` +
-    `<p class="muted">Reference-grounded notes per domain. Content is authored per exam ` +
-    `(CCAO-F migrated; others in progress).</p><ul class="weights">` +
-    exam.domains.map((d) => `<li id="study-domain-${d.id}"><span>${esc(d.name)}</span> <span class="mono">${d.weight}%</span></li>`).join("") +
-    `</ul></div>`;
+function renderSection(sec) {
+  const head = `<h3>${esc(sec.label || sec.id || "")}</h3>`;
+  if (sec.kind === "facts" && Array.isArray(sec.items)) {
+    return `<div class="card">${head}<table class="facts">` +
+      sec.items.map((row) => `<tr><td>${esc(row[0])}</td><td>${esc(row[1])}</td></tr>`).join("") +
+      `</table></div>`;
+  }
+  if (sec.kind === "prose" && Array.isArray(sec.body)) {
+    return `<div class="card">${head}${sec.body.map((p) => `<p>${esc(p)}</p>`).join("")}</div>`;
+  }
+  // generic: domain notes with links/courses if present
+  const links = Array.isArray(sec.links)
+    ? `<ul>${sec.links.map((l) => `<li><a href="${esc(l.url || l[1] || "#")}" target="_blank" rel="noreferrer">${esc(l.label || l[0] || l.url)}</a></li>`).join("")}</ul>` : "";
+  const notes = Array.isArray(sec.body) ? sec.body.map((p) => `<p>${esc(p)}</p>`).join("")
+    : sec.body ? `<p>${esc(sec.body)}</p>` : "";
+  const items = Array.isArray(sec.items) && !sec.kind
+    ? `<ul>${sec.items.map((it) => `<li>${esc(typeof it === "string" ? it : (it.text || it.name || JSON.stringify(it)))}</li>`).join("")}</ul>` : "";
+  return `<div class="card">${head}${notes}${items}${links}</div>`;
 }
 
 function fillSwitcher(exams, current) {

@@ -52,6 +52,15 @@ app.http("catalog", {
   }),
 });
 
+// ---- Study guide -----------------------------------------------------------
+app.http("studyGuide", {
+  methods: ["GET"], authLevel: "anonymous", route: "study/{examId}",
+  handler: (req) => handle(async () => {
+    requireRole(req, "authorized");
+    return json(200, await svc.studyGuide(ctxFromEnv(), req.params.examId!));
+  }),
+});
+
 // ---- Attempts: create / save / resume --------------------------------------
 app.http("attemptsCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts",

@@ -1,5 +1,5 @@
 import { MemoryTableRepo } from "../../api/src/shared/tables.js";
-import { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo } from "../../api/src/shared/repos.js";
+import { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo, StudyGuideRepo } from "../../api/src/shared/repos.js";
 import type { Ctx } from "../../api/src/shared/service.js";
 import type { ClientPrincipal } from "../../api/src/shared/auth.js";
 import type { ExamMeta, QuestionRow } from "../../api/src/shared/types.js";
@@ -16,7 +16,9 @@ export async function buildCtx(): Promise<Ctx> {
     scenarios: new ScenariosRepo(new MemoryTableRepo()),
     attempts: new AttemptsRepo(new MemoryTableRepo()),
     users: new UsersRepo(new MemoryTableRepo()),
+    study: new StudyGuideRepo(new MemoryTableRepo()),
   };
+  await ctx.study.put("STD", { title: "Standard Study Guide", sections: [{ id: "s1", label: "Intro", kind: "prose", body: ["Study."] }] });
 
   // Standard exam
   await ctx.exams.put({

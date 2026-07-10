@@ -8,7 +8,7 @@
 //   node data/tools/seed-tables.mjs --admin "aad|<object-id>" --email you@example.com
 import { readFileSync, existsSync } from "node:fs";
 import { AzureTableRepo } from "../../api/dist/shared/tables.js";
-import { ExamsRepo, QuestionsRepo, ScenariosRepo, UsersRepo } from "../../api/dist/shared/repos.js";
+import { ExamsRepo, QuestionsRepo, ScenariosRepo, UsersRepo, StudyGuideRepo } from "../../api/dist/shared/repos.js";
 
 const args = process.argv.slice(2);
 const examDirs = [];
@@ -29,6 +29,7 @@ const repos = {
   Scenarios: AzureTableRepo.forTable("Scenarios"),
   Attempts: AzureTableRepo.forTable("Attempts"),
   Users: AzureTableRepo.forTable("Users"),
+  StudyGuide: AzureTableRepo.forTable("StudyGuide"),
 };
 for (const r of Object.values(repos)) await r.ensureTable();
 
@@ -36,6 +37,7 @@ const examsRepo = new ExamsRepo(repos.Exams);
 const questionsRepo = new QuestionsRepo(repos.Questions);
 const scenariosRepo = new ScenariosRepo(repos.Scenarios);
 const usersRepo = new UsersRepo(repos.Users);
+const studyRepo = new StudyGuideRepo(repos.StudyGuide);
 const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
 
 for (const dir of examDirs) {
@@ -46,6 +48,9 @@ for (const dir of examDirs) {
   let scen = 0;
   if (existsSync(`${dir}/scenarios.source.json`)) {
     for (const s of readJson(`${dir}/scenarios.source.json`)) { await scenariosRepo.put(s); scen++; }
+  }
+  if (existsSync(`${dir}/studyguide.source.json`)) {
+    await studyRepo.put(exam.examId, readJson(`${dir}/studyguide.source.json`));
   }
   console.log(`seeded ${exam.examId}: ${qs.length} questions, ${scen} scenarios`);
 }

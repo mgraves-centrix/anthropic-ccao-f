@@ -1,7 +1,7 @@
 // Wire repos + config from environment (spec §III.1). Managed identity in cloud
 // (TABLES_ACCOUNT_URL) or Azurite connection string locally.
 import { AzureTableRepo } from "./tables.js";
-import { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo } from "./repos.js";
+import { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo, StudyGuideRepo } from "./repos.js";
 import type { Ctx } from "./service.js";
 import type { AuthConfig } from "./auth.js";
 
@@ -12,6 +12,7 @@ export function ctxFromEnv(): Ctx {
     scenarios: new ScenariosRepo(AzureTableRepo.forTable("Scenarios")),
     attempts: new AttemptsRepo(AzureTableRepo.forTable("Attempts")),
     users: new UsersRepo(AzureTableRepo.forTable("Users")),
+    study: new StudyGuideRepo(AzureTableRepo.forTable("StudyGuide")),
   };
 }
 

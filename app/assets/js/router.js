@@ -9,6 +9,7 @@ export function parseHash() {
   if (parts[0] === "exam" && parts[1]) {
     return { view: "exam", examId: decodeURIComponent(parts[1]), tab: parts[2] || "home" };
   }
+  if (parts[0] === "admin") return { view: "admin" };
   return { view: "catalog" };
 }
 
@@ -16,7 +17,7 @@ export function go(path) { location.hash = path; }
 
 export async function mount(el) {
   const route = parseHash();
-  const render = route.view === "exam" ? routes.get("exam") : routes.get("catalog");
+  const render = routes.get(route.view) || routes.get("catalog");
   el.setAttribute("aria-busy", "true");
   try {
     await render(el, route);

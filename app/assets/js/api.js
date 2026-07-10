@@ -22,5 +22,8 @@ export const api = {
   submit: (attemptId) => req("POST", `/attempts/${encodeURIComponent(attemptId)}/submit`),
   history: (scope, examId, window) =>
     req("GET", `/me/history?scope=${scope}${examId ? `&examId=${encodeURIComponent(examId)}` : ""}&window=${window}`),
+  study: (examId) => req("GET", `/study/${encodeURIComponent(examId)}`),
   requestAccess: (justification) => req("POST", "/access-requests", { justification }),
+  listRequests: () => req("GET", "/access-requests"),
+  decide: (provider, userId, decision, role) => req("POST", "/access-requests/decision", { provider, userId, decision, role }),
 };

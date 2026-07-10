@@ -142,6 +142,18 @@ export class AttemptsRepo {
   }
 }
 
+// ---- Study guide (per exam) -------------------------------------------------
+export class StudyGuideRepo {
+  constructor(private t: TableRepo) {}
+  async put(examId: string, guide: unknown): Promise<void> {
+    await this.t.upsert({ partitionKey: `SG-${examId}`, rowKey: "guide", json: j(guide) });
+  }
+  async get(examId: string): Promise<unknown | undefined> {
+    const e = await this.t.get(`SG-${examId}`, "guide");
+    return e ? p(e.json, null) : undefined;
+  }
+}
+
 // ---- Authorized users / access requests ------------------------------------
 export class UsersRepo {
   constructor(private t: TableRepo) {}

@@ -4,6 +4,7 @@ import { applyStoredTheme, wireThemeToggle } from "./theme.js";
 import { register, startRouter } from "./router.js";
 import { renderCatalog } from "./views/catalog.js";
 import { renderExam } from "./views/exam.js";
+import { renderAdmin } from "./views/admin.js";
 
 async function whoAmI() {
   try {
@@ -20,10 +21,14 @@ async function boot() {
 
   const me = await whoAmI();
   const chip = document.getElementById("userChip");
-  if (chip) chip.textContent = me?.userDetails || "";
+  if (chip) {
+    const isAdmin = (me?.userRoles || []).includes("admin");
+    chip.innerHTML = (isAdmin ? `<a href="#/admin" class="adminlink">Admin</a> ` : "") + (me?.userDetails || "");
+  }
 
   register("catalog", (el) => { document.body.removeAttribute("data-exam"); return renderCatalog(el); });
   register("exam", (el, route) => renderExam(el, route));
+  register("admin", (el) => renderAdmin(el));
 
   const app = document.getElementById("app");
   await startRouter(app);

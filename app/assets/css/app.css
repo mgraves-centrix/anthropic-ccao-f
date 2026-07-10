@@ -88,3 +88,9 @@ a { color: var(--accent-ink); }
 .chart-empty { padding: 2rem; text-align: center; color: var(--muted); background: var(--surface-2); border-radius: var(--r-sm); }
 .switcher__sel { font: inherit; padding: .3rem .5rem; border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
 .visually-hidden, .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.facts { width: 100%; border-collapse: collapse; }
+.facts td { padding: .35rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.facts td:first-child { color: var(--muted); width: 40%; }
+.reqrow { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .6rem; }
+.reqrow__actions { display: flex; gap: .4rem; flex-shrink: 0; }
+.adminlink { margin-right: .5rem; font-weight: 600; }

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildCtx } from "./helpers.js";
 import { mulberry32 } from "../../api/src/shared/shuffle.js";
 import {
-  createAttempt, saveAttempt, submitAttempt, practiceAnswer, resume, catalog,
+  createAttempt, saveAttempt, submitAttempt, practiceAnswer, resume, catalog, studyGuide,
 } from "../../api/src/shared/service.js";
 
 const U = "user-1";
@@ -113,6 +113,16 @@ describe("3-day auto-clear of incompletes", () => {
     const later = { now: T0 + 3 * 86400000 + 1000, rand: mulberry32(1) };
     await resume(U, "STD", ctx, later); // triggers lazy cleanup
     expect(await ctx.attempts.find(U, att.attemptId)).toBeUndefined();
+  });
+});
+
+describe("study guide", () => {
+  it("returns the seeded guide (no key material)", async () => {
+    const ctx = await buildCtx();
+    const g = await studyGuide(ctx, "STD") as { title: string; sections: unknown[] };
+    expect(g.title).toBe("Standard Study Guide");
+    expect(g.sections).toHaveLength(1);
+    expect(await studyGuide(ctx, "NOPE")).toBeNull();
   });
 });
 
