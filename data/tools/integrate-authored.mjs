@@ -10,7 +10,7 @@ const DIR = { "CCAO-F": "ccao-f", "CCDV-F": "ccdv-f", "CCAR-F": "ccar-f", "CCAR-
 const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
 
 function extractBanks(raw) {
-  try { return JSON.parse(raw).banks; } catch { /* fall through */ }
+  try { const o = JSON.parse(raw); return o.banks || (o.result && o.result.banks) || null; } catch { /* fall through */ }
   const i = raw.indexOf('"banks"');
   if (i < 0) return null;
   // find the enclosing object start
@@ -48,7 +48,7 @@ let grand = 0;
 for (const [examId, newQs] of Object.entries(merged)) {
   const dir = DIR[examId];
   if (!dir) { console.error(`unknown exam ${examId}`); continue; }
-  const path = new URL(`../${dir}/questions.source.json`, `file://${process.cwd()}/`);
+  const path = new URL(`../${dir}/questions.source.json`, import.meta.url);
   const existing = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : [];
   const seen = new Set(existing.map((q) => norm(q.stem)));
   const counters = {};

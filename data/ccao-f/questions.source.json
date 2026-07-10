@@ -5266,5 +5266,863 @@
     "status": "published",
     "referenceUrl": "https://support.claude.com/en/articles/12260368-use-incognito-chats",
     "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-001",
+    "domain": 1,
+    "type": "single",
+    "stem": "A marketing manager asks Claude, \"Write something about our product,\" and is disappointed that the draft is generic and misses the point. Based on Anthropic's guidance for getting the best results, what is the single most effective change to the prompt?",
+    "options": [
+      "Add specific context and success criteria, such as the audience, the product's key benefit, the desired tone, and the length",
+      "Repeat the same short request several times in a row so Claude understands it is important",
+      "Type the request in all capital letters to signal urgency and priority",
+      "Switch to a different Claude model and resend the identical vague prompt"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Anthropic's guidance emphasizes being clear and direct and giving Claude the context it needs, including audience, goal, tone, and constraints. Vague prompts produce generic output, so supplying specifics is the highest-leverage fix. Repetition and capitalization do not add missing information. Switching models without improving the prompt leaves the same ambiguity, so the output stays generic.",
+    "referenceText": "Anthropic Help Center, \"How can I get the best results from Claude?\"",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8114494-how-can-i-get-the-best-results-from-claude"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-002",
+    "domain": 1,
+    "type": "single",
+    "stem": "Claude produces a confident-sounding summary of a research report and cites several specific statistics. Before including these figures in a board presentation, what is the most responsible next step?",
+    "options": [
+      "Verify the statistics against the original source, since Claude can occasionally state inaccurate information confidently",
+      "Include the figures as-is because Claude expressed confidence and provided specific numbers",
+      "Ask Claude the same question a second time and accept the answer if the numbers stay the same",
+      "Add a footnote crediting Claude so the presentation is not responsible for any errors"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Anthropic advises that Claude can make mistakes or hallucinate and that users should verify important facts against reliable sources before relying on them. Confidence and specificity are not evidence of accuracy. Re-asking may reproduce the same error. Crediting Claude does not make unverified figures correct and does not remove the presenter's responsibility to check facts.",
+    "referenceText": "Anthropic Help Center, \"How can I get the best results from Claude?\" (accuracy and verifying outputs)",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8114494-how-can-i-get-the-best-results-from-claude"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-003",
+    "domain": 1,
+    "type": "multiple",
+    "stem": "A consultant wants to set up a Claude Project so that every conversation inside it automatically follows the same guidelines and can draw on the same background materials. Which actions support this goal? (Select 2.)",
+    "options": [
+      "Add the relevant background documents to the Project's knowledge so conversations can reference them",
+      "Write custom instructions for the Project that describe the tone, format, and rules Claude should follow",
+      "Paste the full guidelines and documents again at the start of every single message to be safe",
+      "Rename each new chat with the client's name so Claude applies the guidelines automatically",
+      "Delete each conversation after use so the Project knowledge refreshes for the next chat"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Projects let you add knowledge (documents and context) that conversations in the Project can draw on, and set custom instructions that apply across all chats in that Project. Re-pasting everything each message defeats the purpose of a Project and wastes effort. Renaming a chat does not change Claude's behavior. Deleting conversations does not refresh or maintain Project knowledge and simply loses your history.",
+    "referenceText": "Anthropic Help Center, \"What are Projects?\" and Project custom instructions",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-004",
+    "domain": 1,
+    "type": "single",
+    "stem": "An HR coordinator plans to paste a spreadsheet of employees' full names, home addresses, and Social Security numbers into Claude to reformat it into a table. According to Anthropic's responsible-use guidance, what is the best course of action?",
+    "options": [
+      "Avoid submitting the sensitive personal data and instead reformat using de-identified or sample data, keeping the real identifiers out of the prompt",
+      "Submit the full data set because reformatting is a harmless task that does not analyze the identifiers",
+      "Submit the data but ask Claude in the prompt to promise not to remember any of it",
+      "Submit only the Social Security numbers, since names and addresses are the more sensitive fields"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Anthropic's guidance advises being thoughtful about sharing sensitive personal information and avoiding submitting data you would not want processed. De-identifying or using sample data accomplishes the formatting task without exposing real identifiers. The task being 'harmless' does not reduce the sensitivity of the data. Asking Claude to promise not to remember is not a valid data-handling control, and singling out one field misjudges which identifiers are sensitive.",
+    "referenceText": "Anthropic Privacy Center, guidance on sensitive personal data",
+    "status": "published",
+    "referenceUrl": "https://privacy.claude.com/en/articles/10023580-how-do-you-handle-personal-data"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-005",
+    "domain": 1,
+    "type": "single",
+    "stem": "A user wants Claude to review a 60-page contract, cross-reference several attached policy documents, and reason carefully through complex clauses in one go. When choosing how to approach this in the Claude app, which consideration is most aligned with Anthropic's guidance?",
+    "options": [
+      "Select a more capable model suited to complex, multi-step reasoning and provide the documents as context",
+      "Always pick the fastest, lightest model because speed matters more than depth for legal work",
+      "Break nothing down and send only the phrase \"review this contract\" with no documents attached",
+      "Assume any model will give identical results, so the choice of model does not matter"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Anthropic offers different models balancing speed and capability, and recommends matching the model to the task; complex, multi-step analysis benefits from a more capable model plus the needed context. The fastest model is not automatically right for demanding reasoning. Sending a bare instruction with no documents omits essential context. Models differ in capability, so the choice does matter.",
+    "referenceText": "Anthropic Help Center, \"What is the difference between Claude models?\"",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/7996317-what-are-the-differences-between-claude-models"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D1-006",
+    "domain": 1,
+    "type": "multiple",
+    "stem": "An analyst's first prompt returned an answer that was close but too long and lacked citations. Following prompt-optimization and validation best practices, which follow-up refinements are appropriate? (Select 2.)",
+    "options": [
+      "Ask Claude to shorten the response to a specific length and to list the sources it relied on",
+      "Provide a short example of the exact format and level of detail you want the answer to match",
+      "Tell Claude the previous answer was wrong and demand it never make mistakes again",
+      "Start a brand-new chat with the same vague prompt and hope for a better result",
+      "Insist that Claude guarantee its citations are 100% accurate without any need to check them"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Iterating with clearer instructions, such as specifying length and asking for sources, and showing an example of the desired output are core techniques Anthropic recommends for getting better results. Demanding perfection does not improve results, and restarting with the same vague prompt repeats the original problem. A guarantee that citations need no checking contradicts the guidance to verify facts, since Claude can produce inaccurate or fabricated references.",
+    "referenceText": "Anthropic Help Center, \"How can I get the best results from Claude?\" (be specific; use examples; verify facts)",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8114494-how-can-i-get-the-best-results-from-claude",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-001",
+    "domain": 2,
+    "type": "single",
+    "stem": "A marketing manager asks Claude to summarize a 40-page industry report she pasted in, and the summary includes a specific market-size statistic with a dollar figure she does not recognize. Before putting that figure into a board presentation, what is the most responsible next step?",
+    "options": [
+      "Trust the figure because Claude was working directly from the document she provided",
+      "Ask Claude to point to where in the pasted report that statistic appears, then confirm it against the source text",
+      "Rephrase the request as a command so Claude is forced to be accurate",
+      "Add a custom instruction telling Claude to never make mistakes"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Claude can occasionally misattribute or fabricate specifics even when a source is provided, so the reliable check is to have it locate the claim in the source and then verify it against the original text yourself. Trusting it because a document was provided ignores that hallucinations still occur; phrasing as a command does not improve factual accuracy; and an instruction to 'never make mistakes' cannot guarantee correctness and gives false confidence.",
+    "referenceText": "Anthropic Help Center — Claude is providing incorrect or misleading responses. What's going on?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-002",
+    "domain": 2,
+    "type": "single",
+    "stem": "You want Claude to draft a short brief on a recent regulatory change and you plan to fact-check it afterward. Which prompt instruction best supports your ability to validate the output?",
+    "options": [
+      "Ask Claude to write the brief as confidently as possible so it reads well",
+      "Ask Claude to include, for each key claim, the source or note where it is unsure or lacks a reliable source",
+      "Tell Claude that accuracy is extremely important and repeat the instruction three times",
+      "Ask Claude to keep the brief under 100 words so there is less to check"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Asking Claude to cite sources for claims and to flag where it is uncertain gives you concrete anchors to verify and surfaces the weakest points, which is the core of output validation. Maximizing confidence hides uncertainty; repeating an instruction does not make facts correct; and shortening the text reduces content but not the risk that a remaining claim is wrong.",
+    "referenceText": "Anthropic Help Center — Claude is providing incorrect or misleading responses. What's going on?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-003",
+    "domain": 2,
+    "type": "multiple",
+    "stem": "An analyst is reviewing a Claude-generated summary of a legal case and wants to judge whether any part may be a hallucination worth verifying. Which signs warrant extra scrutiny before relying on the content? (Select 2.)",
+    "options": [
+      "A precise citation, case name, or quotation the analyst cannot find in the provided documents",
+      "A statistic or date stated with high confidence but with no source given",
+      "A section where Claude explicitly says it is unsure and recommends confirming",
+      "A summary that restates points already present in the source the analyst supplied"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Unverifiable specific citations and confidently stated facts with no source are classic hallucination-risk signals and should be checked against primary sources. In contrast, a passage where Claude flags its own uncertainty is transparent and appropriately cautious, and a summary that faithfully restates the supplied source is exactly the low-risk behavior you want, so neither of those is a red flag.",
+    "referenceText": "Anthropic Help Center — Claude is providing incorrect or misleading responses. What's going on?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-004",
+    "domain": 2,
+    "type": "single",
+    "stem": "A user keeps getting overly generic email drafts from Claude. They wrote: 'Write a good email to the client.' Applying the principle of being clear and direct, which revision is most likely to produce a usable draft?",
+    "options": [
+      "'Write a really, really good and professional email to the client, please.'",
+      "'Write a 120-word email to client Dana declining the March timeline, proposing April 15, and keeping a warm, apologetic tone.'",
+      "'You are the world's best copywriter. Write the email.'",
+      "'Write an email. Make it perfect and don't leave anything out.'"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Clear and direct prompting means specifying the concrete details Claude needs — audience, length, purpose, key points, and tone — which the second option does. Adding intensifiers like 'really good' or 'perfect' provides no actionable direction, and a role label alone ('world's best copywriter') without the specifics still leaves Claude guessing what to say.",
+    "referenceText": "Anthropic prompt engineering — Be clear and direct",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-005",
+    "domain": 2,
+    "type": "single",
+    "stem": "A support lead wants Claude to categorize incoming tickets into a fixed set of internal labels and format the result consistently. Which prompting technique is most effective for getting reliable, correctly formatted output?",
+    "options": [
+      "Provide two or three example tickets with their correct labels and formatting so Claude can match the pattern",
+      "Ask Claude to be as creative as possible when choosing labels",
+      "Send each ticket with no instructions and correct the output manually every time",
+      "Tell Claude to use whatever categories it thinks are best"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Providing a few worked examples (multishot prompting) shows Claude the exact labels and format you expect, which sharply improves consistency for classification-style tasks. Encouraging creativity or letting Claude invent its own categories works against the goal of a fixed, consistent scheme, and giving no guidance guarantees you keep doing the corrections by hand.",
+    "referenceText": "Anthropic prompt engineering — Multishot prompting with examples",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-006",
+    "domain": 2,
+    "type": "single",
+    "stem": "A consultant has a quick, high-volume need — reformatting and lightly rewording dozens of short meeting notes — and a separate need to work through one dense, multi-step strategic analysis. What is the most sensible way to think about choosing a Claude model for each?",
+    "options": [
+      "Always use the most capable, highest-reasoning model for every task regardless of the work",
+      "Match the model to the task: a faster, lighter model for simple high-volume edits and a more capable model for the complex reasoning task",
+      "Always use the fastest model because speed is what matters most",
+      "Model choice does not affect quality, so pick either one at random"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Anthropic offers models tuned for different trade-offs, and the practical approach is to match the model to the job — lighter and faster for simple, repetitive edits, and a more capable model for deep multi-step reasoning. Defaulting to the top model everywhere can be slower and costlier than needed, always choosing the fastest sacrifices quality on hard tasks, and model choice does meaningfully affect results.",
+    "referenceText": "Anthropic — Choosing the right Claude model for your task",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/about-claude/models/overview"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-007",
+    "domain": 2,
+    "type": "multiple",
+    "stem": "An HR specialist wants to use Claude to help draft responses about employee cases. Which practices reflect responsible, governance-minded use? (Select 2.)",
+    "options": [
+      "Removing or anonymizing names and other identifying personal details before pasting case information",
+      "Treating Claude's draft as final and sending it to employees without review",
+      "Having a qualified person review Claude's output before it is acted upon or shared",
+      "Pasting full employee records so Claude has maximum context, regardless of sensitivity"
+    ],
+    "correct": [
+      0,
+      2
+    ],
+    "rationale": "Responsible use means minimizing sensitive and personally identifiable data before sharing it and keeping a human in the loop to review outputs before they are acted on, especially for consequential HR matters. Sending drafts unreviewed removes the necessary human check, and pasting full identifiable records maximizes privacy risk rather than protecting it.",
+    "referenceText": "Anthropic Privacy Center — How do you protect the privacy of my data?",
+    "status": "published",
+    "referenceUrl": "https://privacy.claude.com/en/articles/10023580-how-do-you-protect-the-privacy-of-my-data",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-008",
+    "domain": 2,
+    "type": "single",
+    "stem": "A small team notices Claude gives inconsistent tone and formatting across their recurring client-report work, and they keep re-pasting the same background context every session. Which configuration approach best addresses both problems?",
+    "options": [
+      "Create a Project for the client work and add the standing background documents plus custom instructions describing the desired tone and format",
+      "Start a brand-new chat for every report and hope the style stays consistent",
+      "Ask Claude in each chat to 'remember' the style from previous conversations",
+      "Paste all the background material again at the start of every single message"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "A Project lets a team keep shared knowledge and custom instructions in one place, so Claude consistently applies the desired tone and format and reuses the background without re-pasting. Fresh chats provide no continuity, Claude does not automatically carry memory across separate conversations on request, and re-pasting everything each message is exactly the inefficiency Projects are designed to remove.",
+    "referenceText": "Anthropic Help Center — What are Projects?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D2-009",
+    "domain": 2,
+    "type": "single",
+    "stem": "Claude's first answer to a complex prompt is vague and misses several requirements. What is the most effective troubleshooting step to improve the result?",
+    "options": [
+      "Resubmit the exact same prompt repeatedly until a better answer appears",
+      "Give specific feedback in a follow-up — name what was missing and ask Claude to revise, adding any details or examples it needs",
+      "Assume the task is beyond Claude and abandon it",
+      "Shorten the prompt to a single vague sentence to avoid confusing Claude"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Iterating with specific feedback — stating exactly what was missing and supplying the needed detail or examples — is the core technique for optimizing a prompt that underperformed. Resubmitting the identical prompt tends to reproduce the same gaps, giving up forgoes an easy fix, and making the prompt vaguer removes the very guidance Claude needs to meet the requirements.",
+    "referenceText": "Anthropic prompt engineering — Overview",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D3-001",
+    "domain": 3,
+    "type": "single",
+    "stem": "A marketing manager types \"Write something about our new product\" and gets a vague, generic result. Based on Anthropic's guidance for getting more helpful answers, which change is MOST likely to improve the output?",
+    "options": [
+      "Provide specific context and explicit instructions: who the audience is, the product's key features, the desired tone, and the exact format (for example, a 150-word LinkedIn post).",
+      "Retype the identical prompt several more times until Claude happens to produce a better version.",
+      "Append the phrase \"and make it perfect, high quality, and professional\" to the same prompt.",
+      "Switch to a faster model so the generic response is at least returned more quickly."
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Key (0) is correct: Anthropic's product guidance says Claude works best when you give clear, specific instructions with as much context as possible (audience, purpose, tone, and format), rather than leaving intent implicit. (1) is wrong because re-running the same underspecified prompt does not add the missing context. (2) is wrong because vague superlatives like \"make it perfect\" give Claude no actionable detail. (3) is wrong because model speed does not address a prompt that lacks specificity; a faster model produces the same generic answer.",
+    "referenceText": "Claude Help Center, 'My prompt isn't giving me a helpful answer.': give Claude clear, specific instructions with as much context as possible (audience, purpose, tone, and desired format) to get higher-quality, on-target responses.",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/7996857-my-prompt-isn-t-giving-me-a-helpful-answer"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D3-002",
+    "domain": 3,
+    "type": "multiple",
+    "stem": "A researcher is using Claude to draft a briefing and wants to guard against inaccurate or fabricated content. Which practices reflect Anthropic's guidance for evaluating and validating Claude's outputs? (Select 3.)",
+    "options": [
+      "Ask Claude to cite or quote the specific sources or provided documents its claims are based on, then check those sources yourself.",
+      "Independently verify high-stakes facts, figures, and citations against authoritative sources before relying on them.",
+      "Treat Claude's confident, fluent tone as proof the information is correct, since well-written answers are reliable.",
+      "Recognize that Claude can \"hallucinate\"—state things that sound authoritative but are wrong—especially about events after its training cutoff.",
+      "Assume any hyperlink Claude generates is valid and skip opening it to confirm it works."
+    ],
+    "correct": [
+      0,
+      1,
+      3
+    ],
+    "rationale": "Keys (0), (1), and (3) match Anthropic's guidance: Claude can produce convincing but mistaken statements and can be unreliable on recent events, so users should not treat it as a single source of truth, should verify high-stakes information, and can ask it to ground answers in citable sources. (2) is wrong because a confident or polished tone is not evidence of accuracy—hallucinations often sound authoritative. (4) is wrong because Claude can produce links that do not work; the guidance is to check them, not assume validity.",
+    "referenceText": "Claude Help Center, 'Claude is providing incorrect or misleading responses': Claude can hallucinate convincing-but-false information and unreliable links; do not rely on it as a single source of truth, and verify high-stakes or recent claims.",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on",
+    "selectCount": 3
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D3-003",
+    "domain": 3,
+    "type": "single",
+    "stem": "An operations analyst needs Claude to summarize a very high daily volume of short, simple customer-support tickets, where each summary is straightforward and speed and cost matter more than deep reasoning. Which model choice best fits this workload?",
+    "options": [
+      "Choose a faster, lower-cost model such as Haiku, which is well suited to high-volume, lower-complexity work.",
+      "Always choose the most powerful model (Opus) for every ticket, since a more capable model is strictly better in all cases.",
+      "Choose whichever model appears first in the model picker, because the order always reflects the best default for any task.",
+      "Avoid selecting a model entirely and let the length of each response determine which model is used."
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Key (0) is correct: Anthropic positions lighter, faster models like Haiku for high-volume, low-complexity tasks where speed and cost efficiency matter, and lets you change the model to match the task. (1) is wrong because the most powerful model costs more and is meant for genuinely complex reasoning; using it for simple, high-volume work is unnecessarily expensive. (2) is wrong because picker order is not a rule for matching a model to a task's complexity. (3) is wrong because model selection is a deliberate choice available to the user, not something inferred from response length.",
+    "referenceText": "Claude Help Center, 'Change the model, effort, and thinking settings': you can select the model next to the send button—use a faster, efficient model for simpler work and raise capability/effort for complex, correctness-critical tasks.",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8664678-change-the-model-effort-and-thinking-settings"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D3-004",
+    "domain": 3,
+    "type": "single",
+    "stem": "A consultant wants Claude to consistently follow her firm's writing style guide and answer from the perspective of a financial-services advisor across many separate chats, without re-pasting the guide every time. What is the most effective way to configure this in Claude?",
+    "options": [
+      "Create a Project, upload the style guide to the project's knowledge, add project instructions describing the advisor role and tone, and start her chats inside that Project.",
+      "Paste the full style guide at the top of every new chat and rely on Claude to recall it in later, unrelated chats.",
+      "Ask Claude in a single chat to permanently memorize the guide so it automatically applies to all future conversations.",
+      "Rely on Claude's training data already containing her firm's proprietary internal style guide."
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Key (0) is correct: Projects let you upload reference material to a shared knowledge base and set project instructions—for example, a specific tone or answering from the perspective of a particular role or industry—that apply to every chat started in that Project, which is exactly this recurring, context-heavy need. (1) is wrong because chats do not carry context into separate, unrelated conversations, making manual re-pasting error-prone. (2) is wrong because Claude does not permanently memorize content from one chat and apply it everywhere. (3) is wrong because a firm's proprietary internal style guide is not part of Claude's training data.",
+    "referenceText": "Claude Help Center, 'What are projects?': upload documents to a project's knowledge base and define project instructions (e.g., a formal tone or answering from the perspective of a specific role or industry) that apply across all chats in the project.",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D3-005",
+    "domain": 3,
+    "type": "multiple",
+    "stem": "An HR specialist plans to use Claude to help draft performance-review summaries. Which practices reflect responsible, privacy-conscious use of Claude for this task? (Select 2.)",
+    "options": [
+      "Minimize or avoid entering unnecessary sensitive personal data, and remove or anonymize identifying details where they are not needed.",
+      "Have a qualified person review and validate each draft before it is finalized or acted upon, rather than treating Claude's output as a final decision.",
+      "Let Claude make the final personnel decision autonomously, to remove human bias from the process entirely.",
+      "Assume anything typed into Claude is automatically published, used to train models, and shared with other users regardless of settings.",
+      "Post the draft reviews to a public forum to crowdsource corrections from anonymous readers."
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Keys (0) and (1) reflect responsible use: limit exposure of sensitive personal data (data minimization/anonymization) and keep a human in the loop to review and validate outputs before they are used for consequential decisions. (2) is wrong because high-stakes personnel decisions require human judgment, not autonomous AI decision-making. (3) is a factual overstatement—data use depends on your settings and privacy controls, and Anthropic encrypts data and applies least-privilege access rather than publishing chats to other users. (4) is wrong because posting confidential HR content publicly is a serious privacy violation.",
+    "referenceText": "Anthropic Privacy Center, 'How does Anthropic protect the personal data of Claude users?': data is encrypted in transit and at rest with least-privilege access controls; combined with product guidance to keep human review over consequential outputs and minimize sensitive inputs.",
+    "status": "published",
+    "referenceUrl": "https://privacy.claude.com/en/articles/10458704-how-does-anthropic-protect-the-personal-data-of-claude-users",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-001",
+    "domain": 4,
+    "type": "single",
+    "stem": "A marketing manager keeps getting summaries from Claude that are too long and miss the action items she needs. She currently prompts: \"Summarize this meeting transcript.\" Which revision best applies the principle of being clear and direct to get more useful output?",
+    "options": [
+      "\"Summarize this meeting transcript in 3 bullet points, then list every decision made and who owns each follow-up action.\"",
+      "\"Please try to make the summary a bit shorter and more focused if you can.\"",
+      "\"Summarize this meeting transcript. Remember, you are a very capable and intelligent assistant.\"",
+      "\"Summarize this meeting transcript as accurately and completely as humanly possible.\""
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Being clear and direct means specifying the exact format, length, and content you want, as if instructing a new colleague. Option 0 names the structure (3 bullets), the required elements (decisions, owners, follow-ups), and constraints. Option 1 is vague and hedged (\"a bit\", \"if you can\"), giving Claude no concrete target. Option 2 adds flattery that does not clarify the task or output. Option 3 asks for completeness, which pushes toward the long, unfocused output she is trying to avoid.",
+    "referenceText": "Anthropic — Be clear and direct (prompt engineering)",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-002",
+    "domain": 4,
+    "type": "single",
+    "stem": "An HR specialist wants Claude to classify incoming employee questions into consistent categories (Benefits, Payroll, IT, Other) with a consistent output format. What is the most effective prompting technique to achieve reliable, consistently formatted results?",
+    "options": [
+      "Include a few worked examples showing sample questions and exactly how each should be categorized and formatted",
+      "Send each question in a separate new chat so Claude starts fresh every time",
+      "Ask Claude to be as creative as possible when deciding the categories",
+      "Tell Claude to keep responding until it feels fully confident in the answer"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Multishot (few-shot) prompting — giving several examples of input paired with the desired output — is the recommended way to make classification accurate and consistently formatted, because Claude patterns its responses on the examples. Starting a fresh chat each time removes helpful context and does not improve consistency. Encouraging creativity works against the goal of consistent, fixed categories. Telling Claude to keep going until confident does not enforce format or category consistency.",
+    "referenceText": "Anthropic — Use examples (multishot prompting)",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-003",
+    "domain": 4,
+    "type": "single",
+    "stem": "A financial analyst asks Claude for the current quarter's revenue figures for a specific public company and Claude provides confident-sounding numbers. Before including them in a report to leadership, what is the most responsible next step?",
+    "options": [
+      "Verify each figure against the company's official filings or another authoritative source before using it",
+      "Publish the numbers, since Claude expressed confidence and used specific figures",
+      "Ask Claude to rate its own confidence and trust the numbers if the rating is high",
+      "Rephrase the prompt more politely and accept whatever numbers come back the second time"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Claude can produce plausible but incorrect information (hallucinations), and its knowledge has a training cutoff, so current, specific facts must be independently verified against authoritative sources before relying on them, especially for high-stakes reporting. A confident tone or specific numbers is not evidence of accuracy. A self-reported confidence score is not a reliable validity check. Rephrasing politely does not make unverified figures trustworthy.",
+    "referenceText": "Anthropic — Reduce hallucinations",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/reduce-hallucinations"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-004",
+    "domain": 4,
+    "type": "single",
+    "stem": "A consultant is starting a months-long client engagement and wants Claude to consistently know the client's brand voice, key background documents, and preferred output style across many separate conversations, without re-pasting that context each time. Which Claude feature is designed for this?",
+    "options": [
+      "Create a Project and add the background documents and instructions to its knowledge and custom instructions",
+      "Paste all the context at the top of every new chat manually",
+      "Rely on Claude to remember the details automatically from a previous unrelated chat",
+      "Use a single very long conversation and never start a new chat for the whole engagement"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Projects let you group related chats and attach shared knowledge (documents) and custom instructions so Claude applies the same context and style across every conversation in that Project. Manually pasting context each time is exactly the burden Projects removes. Claude does not automatically carry details from a separate, unrelated conversation. Forcing everything into one endless chat is unwieldy and does not scale across a long engagement.",
+    "referenceText": "Anthropic — Using Projects on Claude",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9945780-using-projects-on-claude-ai"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-005",
+    "domain": 4,
+    "type": "multiple",
+    "stem": "An operations team is drafting internal guidelines for using Claude responsibly in everyday knowledge work. Which practices support responsible, governance-aware use? (Select 3.)",
+    "options": [
+      "Keep a human in the loop to review Claude's outputs before they are used in consequential decisions",
+      "Avoid pasting sensitive personal or confidential data that is not necessary for the task",
+      "Verify factual claims and request sources before relying on them",
+      "Treat every Claude response as authoritative and skip review to save time",
+      "Share one login and paste customer records freely to speed up drafting"
+    ],
+    "correct": [
+      0,
+      1,
+      2
+    ],
+    "rationale": "Responsible use centers on human review of outputs before consequential use, minimizing exposure of sensitive or unnecessary personal/confidential data, and validating facts and sources before relying on them. Treating every response as authoritative removes the human oversight that catches errors and hallucinations. Freely pasting customer records is a data-handling and privacy risk that contradicts data minimization.",
+    "referenceText": "Anthropic — Usage Policy",
+    "status": "published",
+    "referenceUrl": "https://www.anthropic.com/legal/aup",
+    "selectCount": 3
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D4-006",
+    "domain": 4,
+    "type": "multiple",
+    "stem": "A writer's prompt is producing off-target results: the tone is wrong and the response ignores parts of a long reference document. Which prompt-optimization adjustments are appropriate to try? (Select 2.)",
+    "options": [
+      "Assign Claude a clear role (for example, \"You are an editor for a healthcare newsletter\") to steer tone and expertise",
+      "Use structure such as headings or tags to clearly separate the reference document from your instructions",
+      "Make the prompt as short and vague as possible so Claude has room to guess",
+      "Repeat the same prompt several times unchanged until the output happens to improve"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Giving Claude a role via a system/role prompt steers tone, style, and domain expertise, and using clear structure (headings, tags, or sections) helps Claude distinguish reference material from instructions so it does not overlook parts of a long document. Making the prompt shorter and vaguer removes the guidance needed to hit the target. Re-sending the identical prompt repeatedly does not address the underlying clarity or structure problems.",
+    "referenceText": "Anthropic — Giving Claude a role with a system prompt",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/system-prompts",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D5-001",
+    "domain": 5,
+    "type": "single",
+    "stem": "A marketing manager asks Claude, \"Write something about our product,\" and is disappointed that the response is generic and misses key selling points. Which change to the prompt best reflects the \"be clear and direct\" principle and is most likely to improve the result?",
+    "options": [
+      "Specify the audience, the desired length and tone, and the three product benefits to emphasize",
+      "Send the same prompt several more times until a better version appears by chance",
+      "Add the instruction \"be creative and think outside the box\" to the request",
+      "Tell Claude to keep the answer as short as possible so there is less room for error"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Being clear and direct means giving Claude the specific context and constraints a new coworker would need: audience, length, tone, and the exact points to emphasize (index 0). Re-sending the identical vague prompt relies on luck rather than better instructions (index 1). \"Be creative\" is still vague and does not supply the missing specifics (index 2). Forcing brevity does not address the lack of direction and can drop important selling points (index 3).",
+    "referenceText": "Anthropic — Prompting best practices: Be clear and direct",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D5-002",
+    "domain": 5,
+    "type": "single",
+    "stem": "A user relies on Claude to draft a briefing that cites specific statistics and legal deadlines. What is the most responsible way to treat Claude's output before sending it to stakeholders?",
+    "options": [
+      "Independently verify the facts, figures, and any cited sources before relying on them",
+      "Trust the numbers because Claude expressed them confidently and without hedging",
+      "Assume the output is accurate as long as the writing is fluent and well organized",
+      "Publish it immediately and correct any errors only if a stakeholder complains"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Claude can occasionally produce plausible-sounding but incorrect information, so users should not treat it as a single source of truth and should verify facts, figures, and cited sources before relying on them, especially for high-stakes content (index 0). Confidence of tone, fluency, and organization are not evidence of accuracy (indexes 1 and 2). Waiting for complaints after publishing exposes stakeholders to errors that human review is meant to catch (index 3).",
+    "referenceText": "Anthropic — Claude is providing incorrect or misleading responses. What's going on?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D5-003",
+    "domain": 5,
+    "type": "multiple",
+    "stem": "A consultant is setting up a Claude Project so the whole team gets consistent help drafting client proposals in the firm's style. Which actions make good use of Projects' configuration features? (Select 2.)",
+    "options": [
+      "Upload the firm's proposal templates and style guide as project knowledge so responses draw on them",
+      "Add custom instructions describing the tone, structure, and formatting proposals should follow",
+      "Paste each client's full credit-card and banking details into the project knowledge for convenience",
+      "Assume every new chat automatically remembers instructions from unrelated projects",
+      "Rely on Claude to invent the firm's brand guidelines since it cannot access the real ones"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Projects let you add reference material as project knowledge and set custom instructions that shape every chat in that project, which is exactly how to enforce a consistent style (indexes 0 and 1). Uploading sensitive payment and banking data is inappropriate; users should avoid putting unnecessary sensitive information into Claude (index 2). Instructions apply within a project, not across unrelated ones, so index 3 is false. Providing the real guidelines is the point of project knowledge; having Claude invent them defeats the purpose (index 4).",
+    "referenceText": "Anthropic — What are Projects?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D5-004",
+    "domain": 5,
+    "type": "single",
+    "stem": "An HR specialist wants to reduce the chance that Claude fabricates policy details when answering employee questions about the company handbook. Which prompting approach is most effective?",
+    "options": [
+      "Provide the relevant handbook text and instruct Claude to answer only from it and say when the answer is not covered",
+      "Tell Claude to always give a definitive answer even when it is unsure",
+      "Ask the question without any handbook context and trust Claude's general knowledge of HR law",
+      "Instruct Claude to never say \"I don't know\" so responses always sound authoritative"
+    ],
+    "correct": [
+      0
+    ],
+    "rationale": "Grounding Claude in the actual source document and allowing it to say when something is not covered is a core technique for producing accurate, grounded answers and reducing fabrication (index 0). Forcing a definitive answer or forbidding \"I don't know\" pressures Claude to guess and invent details (indexes 1 and 3). Relying on general knowledge for company-specific policy invites inaccurate, non-authoritative answers (index 2).",
+    "referenceText": "Anthropic — Prompting best practices: Ground responses in the provided documents",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D5-005",
+    "domain": 5,
+    "type": "multiple",
+    "stem": "A knowledge worker wants Claude to consistently produce customer-support replies that match one specific format and voice. Which prompting techniques directly help achieve that consistency? (Select 2.)",
+    "options": [
+      "Include a few example question-and-answer pairs that show the exact format and tone wanted",
+      "Assign Claude a role, such as \"You are a friendly support specialist for our software,\" to set voice",
+      "Use vague wording so Claude has maximum freedom to interpret each request differently",
+      "Avoid giving any examples so responses stay unpredictable and fresh each time",
+      "Change the desired format in every message so Claude cannot settle on a pattern"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Providing example input-output pairs (few-shot/multishot prompting) shows Claude the exact format and tone to imitate, and assigning a role via a system/role prompt sets a consistent voice (indexes 0 and 1). Vague wording, withholding examples, and constantly changing the format all work against consistency (indexes 2, 3, and 4).",
+    "referenceText": "Anthropic — Prompting best practices: Use examples (multishot prompting)",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-001",
+    "domain": 6,
+    "type": "single",
+    "stem": "A marketing manager asks Claude for the current market-share statistics of three competitors and wants to put the numbers directly into a board deck. What is the most responsible way to handle Claude's response before using it?",
+    "options": [
+      "Paste the numbers straight into the deck, since Claude is designed to give factual answers",
+      "Ask Claude to cite its sources and then independently verify each statistic against the original reports before using them",
+      "Rerun the same prompt twice; if the numbers match, treat them as confirmed",
+      "Increase the amount of detail in the prompt so Claude is forced to be accurate"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Claude can generate plausible-sounding but incorrect figures (hallucinations), so specific factual claims like statistics should be verified against authoritative sources before being relied upon; asking for sources and checking them is the recommended practice. Pasting numbers directly ignores the risk of hallucination. Rerunning the prompt can reproduce the same wrong answer, so agreement is not verification. Adding detail improves relevance but does not guarantee factual accuracy.",
+    "referenceText": "Anthropic Help Center - How up to date is Claude's training data",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8114517-how-up-to-date-is-claude-s-training-data"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-002",
+    "domain": 6,
+    "type": "multiple",
+    "stem": "An HR coordinator wants to use Claude to help draft standard onboarding emails. Which practices best support responsible handling of sensitive data? (Select 2.)",
+    "options": [
+      "Remove or anonymize employees' personal identifiers before pasting information into the chat",
+      "Include full national ID numbers so the emails are as personalized as possible",
+      "Review the organization's data-handling policies to confirm what information is appropriate to share with Claude",
+      "Disable all human review so the process is fully automated and faster",
+      "Assume any data is safe to share because conversations are always private"
+    ],
+    "correct": [
+      0,
+      2
+    ],
+    "rationale": "Minimizing and anonymizing sensitive personal data before sharing it, and following your organization's data-handling policies, are core responsible-use practices. Including full national ID numbers unnecessarily exposes sensitive data. Removing human review eliminates a key safeguard rather than supporting responsible use. Assuming all data is safe to share misrepresents how privacy works and encourages oversharing.",
+    "referenceText": "Anthropic Privacy Policy - how Anthropic handles your data",
+    "status": "published",
+    "referenceUrl": "https://www.anthropic.com/legal/privacy",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-003",
+    "domain": 6,
+    "type": "single",
+    "stem": "A consultant repeatedly reminds Claude in every new chat that responses must use British spelling, a formal tone, and reference the firm's style guide. What Claude feature is designed to apply these preferences automatically across related conversations?",
+    "options": [
+      "Sending the reminders as a longer message each time so Claude remembers better",
+      "Setting up custom instructions and using a Project with the style guide as provided knowledge so preferences apply consistently",
+      "Switching to a faster model so the preferences take effect sooner",
+      "Turning off chat history so each conversation starts identically"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Custom instructions let you specify persistent preferences like tone and spelling, and Projects let you attach provided knowledge such as a style guide so Claude applies them across related conversations. Repeating a long message each time is inefficient and error-prone. Model speed has no bearing on preference retention. Turning off chat history removes context rather than applying consistent preferences.",
+    "referenceText": "Anthropic Help Center - What are Projects",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-004",
+    "domain": 6,
+    "type": "single",
+    "stem": "A user needs to quickly summarize dozens of short, routine customer emails throughout the day and cares most about speed and lower cost, not deep reasoning. Which selection approach is most appropriate?",
+    "options": [
+      "Always choose the most capable, highest-reasoning model for every task to be safe",
+      "Choose a faster, lighter model suited to simple high-volume tasks, reserving the most capable model for complex work",
+      "Avoid Claude entirely because summarization always requires human writing",
+      "Pick a model at random since all Claude models perform identically"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Matching the model to the task is a key skill: a faster, lighter model is well suited to simple, high-volume work like routine summaries, while the most capable model is best reserved for complex reasoning. Always using the highest-end model wastes speed and cost on simple tasks. Avoiding Claude entirely is unwarranted for routine summarization. Claude models differ in capability and speed, so random selection is not sound.",
+    "referenceText": "Anthropic Help Center - What models does Claude offer",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9803820-what-models-does-claude-offer"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-005",
+    "domain": 6,
+    "type": "multiple",
+    "stem": "A user is not getting useful results from a vague prompt. Which techniques are most likely to improve the quality of Claude's output? (Select 2.)",
+    "options": [
+      "Give clear, direct instructions that state exactly what you want and the desired format",
+      "Make the prompt as short and ambiguous as possible so Claude can be creative",
+      "Provide a concrete example of the kind of output you want",
+      "Insist that Claude never makes mistakes and demand a perfect answer",
+      "Repeat the same one-line request several times in a row"
+    ],
+    "correct": [
+      0,
+      2
+    ],
+    "rationale": "Being clear and direct about the task and desired format, and providing an example of the output you want, are proven prompt-engineering techniques that improve results. Deliberate ambiguity gives Claude less to work with and worsens output. Demanding perfection does not change capability or reduce errors. Repeating the same vague line adds no useful information.",
+    "referenceText": "Anthropic prompt engineering - Be clear and direct",
+    "status": "published",
+    "referenceUrl": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D6-006",
+    "domain": 6,
+    "type": "single",
+    "stem": "A financial analyst plans to use Claude to draft investment recommendations that clients will act on. Which governance practice is most important before those recommendations are shared?",
+    "options": [
+      "Publish Claude's draft directly to clients to save time, since it was reviewed by AI",
+      "Have a qualified human review and validate the recommendations before they are shared",
+      "Ask Claude to confirm in writing that its recommendations are guaranteed to be correct",
+      "Rely on the fact that Claude cannot make mistakes in specialized domains"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Meaningful human review is essential for high-stakes, consequential outputs like investment advice; a qualified person should validate Claude's work before it is acted upon. Publishing AI drafts directly skips necessary oversight. A model's self-confirmation does not guarantee correctness. Claude can make mistakes, especially in specialized domains, so assuming infallibility is unsafe.",
+    "referenceText": "Anthropic Usage Policy - appropriate use and human oversight",
+    "status": "published",
+    "referenceUrl": "https://www.anthropic.com/legal/aup"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D7-001",
+    "domain": 7,
+    "type": "single",
+    "stem": "A marketing manager asks Claude to \"write something about our product\" and is unhappy with the vague, generic result. According to Anthropic's guidance on prompting, what is the single most effective first change to improve the output?",
+    "options": [
+      "Repeat the same prompt several times until Claude produces a better version by chance",
+      "Give Claude clear, specific direction — including the audience, purpose, desired length, and tone",
+      "Switch to a different Claude model, since the wording of the prompt rarely affects quality",
+      "Tell Claude to \"be creative and detailed\" without adding any other specifics"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Anthropic's prompting guidance emphasizes treating Claude like a newly hired contractor with no context: give specific instructions about the audience, purpose, format, length, and tone. Repeating the same vague prompt adds no information. Changing models does not fix an under-specified prompt — clarity is the primary lever. \"Be creative and detailed\" is still vague and gives Claude nothing concrete to work from.",
+    "referenceText": "Anthropic Help Center — Introduction to prompt design",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/7996853-introduction-to-prompt-design"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D7-002",
+    "domain": 7,
+    "type": "single",
+    "stem": "An analyst uses Claude to summarize a market report and Claude includes a specific statistic and a citation to a study the analyst has never seen. Before using the number in a client deliverable, what is the most responsible next step?",
+    "options": [
+      "Trust the statistic, because Claude provided a citation alongside it",
+      "Independently verify the statistic and confirm the cited source actually exists and says what Claude claims",
+      "Ask Claude to repeat the statistic; if it gives the same number twice, treat it as confirmed",
+      "Delete the statistic entirely, since anything Claude produces about numbers is unreliable"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Claude can produce plausible-sounding but incorrect facts or citations (hallucinations), so Anthropic advises not treating Claude as a single source of truth and reviewing its cited sources against the original material before relying on high-stakes output. A citation appearing in the output does not guarantee the source exists or supports the claim. Asking Claude to repeat itself only confirms consistency, not accuracy. Deleting all numbers is an overreaction — verification, not blanket distrust, is the recommended practice.",
+    "referenceText": "Anthropic Help Center — Claude is providing incorrect or misleading responses. What's going on?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on"
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D7-003",
+    "domain": 7,
+    "type": "multiple",
+    "stem": "A consultant wants a Claude Project to consistently draft client emails in their firm's voice and reference the firm's standard service descriptions, without re-explaining context every time. Which two configuration steps best support this? (Select 2.)",
+    "options": [
+      "Add the firm's tone, formatting rules, and standard sign-off as the Project's custom instructions",
+      "Upload the firm's service descriptions and style guide to the Project's knowledge so Claude can reference them",
+      "Paste the firm's entire client database, including personal contact details, into the Project",
+      "Start a brand-new chat with no shared context for each email to keep responses unbiased",
+      "Rely on Claude to infer the firm's voice automatically from a single one-line request"
+    ],
+    "correct": [
+      0,
+      1
+    ],
+    "rationale": "Projects let users set project (custom) instructions — persistent guidance on tone and format — and add documents to project knowledge that Claude references across every chat in the Project, exactly what is needed here. Pasting a client database with personal contact details violates data-minimization and responsible-use guidance and is unnecessary for capturing voice. Starting a fresh context-free chat each time defeats the purpose of a Project. Expecting Claude to infer a specific firm voice from one line contradicts the guidance to give clear, specific instructions.",
+    "referenceText": "Anthropic Help Center — What are Projects?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/9517075-what-are-projects",
+    "selectCount": 2
+  },
+  {
+    "examId": "CCAO-F",
+    "questionId": "G-D7-004",
+    "domain": 7,
+    "type": "single",
+    "stem": "An HR generalist wants to use Claude to help summarize employee performance notes. Which approach best reflects Anthropic's guidance on privacy and responsible use?",
+    "options": [
+      "Paste full names, ID numbers, and health details so the summary is as complete as possible",
+      "Remove or generalize identifying and sensitive details before sharing, and have a person review the output before it is used",
+      "Assume the data is protected because Consumer chats are never seen by anyone at Anthropic under any circumstances",
+      "Turn the task over to Claude entirely and act on its conclusions without human review to save time"
+    ],
+    "correct": [
+      1
+    ],
+    "rationale": "Anthropic's guidance encourages minimizing sensitive and personally identifying information you share and keeping a human in the loop for consequential, people-impacting decisions like HR matters. Pasting full identifiers and health details is the opposite of data minimization. The claim that chats are \"never seen by anyone under any circumstances\" is false — by default Anthropic staff do not view conversations, but limited review can occur, for example to enforce the Usage Policy or for safety, so it is not a safe assumption. Removing human review from an HR decision is inappropriate for a high-stakes use.",
+    "referenceText": "Anthropic Help Center — Inputting sensitive data: who can view my conversations?",
+    "status": "published",
+    "referenceUrl": "https://support.claude.com/en/articles/8325621-i-would-like-to-input-sensitive-data-into-my-chats-with-claude-who-can-view-my-conversations"
   }
 ]
