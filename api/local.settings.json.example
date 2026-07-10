@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "TABLES_CONNECTION_STRING": "UseDevelopmentStorage=true",
+    "AUTHZ_MODE": "allowlist",
+    "AUTO_APPROVE_DOMAINS": "majorkeytech.com,centrixlabs.com,identityfabric.ai"
+  }
+}
