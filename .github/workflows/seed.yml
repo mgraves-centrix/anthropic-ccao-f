@@ -1,0 +1,41 @@
+name: Seed data (manual)
+
+# Phone-friendly: run from the GitHub mobile app via Actions → "Seed data" → Run.
+# Seeds exams/questions/scenarios/study-guide into Table Storage. Requires the repo
+# secret AZURE_TABLES_CONNECTION_STRING (Storage account connection string) OR, for
+# managed-identity/OIDC setups, adapt to federated credentials.
+on:
+  workflow_dispatch:
+    inputs:
+      exams:
+        description: "Space-separated exam dirs to seed"
+        required: true
+        default: "data/ccao-f data/ccdv-f data/ccar-f data/ccar-p"
+      admin:
+        description: "Optional first admin key (provider|userId), e.g. aad|<object-id>"
+        required: false
+        default: ""
+      adminEmail:
+        description: "Optional admin email"
+        required: false
+        default: ""
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+      - run: npm run build:api
+      - name: Seed
+        env:
+          TABLES_CONNECTION_STRING: ${{ secrets.AZURE_TABLES_CONNECTION_STRING }}
+        run: |
+          ARGS=""
+          for d in ${{ github.event.inputs.exams }}; do ARGS="$ARGS --exam $d"; done
+          if [ -n "${{ github.event.inputs.admin }}" ]; then
+            ARGS="$ARGS --admin '${{ github.event.inputs.admin }}' --email '${{ github.event.inputs.adminEmail }}'"
+          fi
+          eval node data/tools/seed-tables.mjs $ARGS
