@@ -86,8 +86,9 @@ emulators.
 | # | Decision |
 |---|----------|
 | Hosting | **Azure Static Web Apps, Standard tier** (`app/` + `api/`), GitHub Actions deploy. |
-| Auth | **GitHub is a first-tier, invite-free provider** (primary) + optional **tenant-locked Entra OIDC** (MFA/Conditional Access) for anyone who needs it or for credential-less external users via B2B guest + email OTP (§III.6, Appendix). |
-| Authorization | Custom **`authorized`** role via `/api/GetRoles`, resolved from **either** (a) **GitHub org/team membership** (invite-free — onboarding = add to the org; requires org-enforced 2FA) **or** (b) the **`AuthorizedUsers` allowlist**. Configurable per deployment; both are supported. Server re-checks on every route. |
+| Auth | **Entra B2B is primary** (tenant-locked OIDC, MFA/Conditional Access, credential-less via **email OTP / self-service sign-up**); **GitHub org membership is a secondary** provider. Both supported per deployment. (§III.6, Appendix.) |
+| Onboarding | **Self-service registration + approval** — new users sign in via B2B email OTP (no pre-sent invite), land on a **Request access** page, submit; an **admin approves with one tap** (or **auto-approve by email domain**). No hand-composed invites. (§III.6a.) |
+| Authorization | Custom **`authorized`** role via `/api/GetRoles`, from `AuthorizedUsers` where `status="active"`; **`admin`** role manages requests; **GitHub org/team membership** may also grant `authorized`. Server re-checks every route. |
 | Store | **Azure Table Storage** (Azurite locally); access via **managed identity** in cloud (no connection string). |
 | Question protection | Client receives **stems+options+type+domain+scenarioId only**; keys/rationale/reference server-side; returned only on Practice `answer` or Mock `submit`. |
 | Scoring | `scaled = clamp(round(100 + accuracy*900), 100, 1000)`; **cut 720**. Mock item pick = **largest-remainder apportionment** across domain weights. |
@@ -137,12 +138,13 @@ Browser SPA ──HTTPS──► SWA(Standard) ──► Functions(TS) ──(Ma
 │       ├── api.js                    # typed fetch wrappers for /api/*
 │       ├── state.js                  # attempt/session state + localStorage cache
 │       ├── theme.js                  # theme toggle + per-exam accent application
-│       ├── views/{home,practice,mock,study,progress}.js
+│       ├── views/{home,practice,mock,study,progress,admin}.js   # admin = requests approval (admin-gated)
 │       ├── components/{qcard,timer,switcher,verdict,studyRecs}.js
 │       └── charts/{scoreHistory.js,domainBars.js,svgutil.js}
 ├── api/                              # SWA api_location — Functions v4 (TypeScript)
 │   ├── src/functions/
 │   │   ├── getRoles.ts               # POST /api/GetRoles  (rolesSource)
+│   │   ├── accessRequests.ts         # POST /api/access-requests + admin list/decision
 │   │   ├── catalog.ts                # GET  /api/catalog
 │   │   ├── attemptsCreate.ts         # POST /api/attempts
 │   │   ├── attemptsSave.ts           # PATCH /api/attempts/{id}
@@ -223,7 +225,10 @@ interface AttemptRow {
 }
 ```
 **`AuthorizedUsers`** — PK=`"USER"`, RK=`` `${provider}|${providerUserId}` `` (or email):
-`{ role:"authorized"|"reviewer", displayName, invitedBy, addedAt }`
+`{ role:"authorized"|"reviewer"|"admin", status:"pending"|"active"|"denied", email,
+   displayName, justification?, requestedAt, decidedBy?, decidedAt? }`
+- `GetRoles` grants a role only when `status==="active"`. `pending`/`denied` → no access.
+- First admin is seeded out-of-band (Appendix); admins approve subsequent requests.
 **`Audit`** — PK=`yyyy-mm-dd`, RK=`` `${ticks}|${rand}` ``: `{ userId, event, route, meta }`
 **`RateLimit`** — PK=`userId`, RK=`` `${route}|${windowStart}` ``: `{ count }` (or in-memory).
 
@@ -238,6 +243,16 @@ Common: all routes (except `/login`, `/.auth/*`) require role `authorized`; serv
   → `{ roles: string[] }`. Per `AUTHZ_MODE`: `github-org` → `["authorized"]` if the GitHub
   caller is in `GITHUB_ORG`(/`GITHUB_TEAM`) via GitHub API (Key Vault token, cached), else `[]`;
   `allowlist` → from `AuthorizedUsers`; combined → union. Never trusts client-supplied roles.
+- **Access requests (self-service registration):**
+  - **`POST /api/access-requests`** — any *authenticated* user (no `authorized` needed) →
+    creates/updates their own `AuthorizedUsers` row `status="pending"` from the principal
+    (`email`,`displayName` server-derived) + `{ justification? }`. **Domain auto-approve:** if
+    the email domain ∈ `AUTO_APPROVE_DOMAINS`, set `status="active", role="authorized"`
+    immediately. Idempotent; audited; rate-limited. Returns `{ status }`.
+  - **`GET /api/access-requests?status=pending`** — **`admin` only** → list requests.
+  - **`POST /api/access-requests/{id}/decision`** — **`admin` only** — `{ decision:"approve"|"deny",
+    role?:"authorized"|"reviewer" }` → sets `status` + `decidedBy/At`; audited. Optional
+    notification to the requester. (One-tap approve link may target this route.)
 - **`GET /api/catalog`** → `ExamMeta[]` (no questions/keys).
 - **`POST /api/attempts`** — `{ examId, mode, filters?:{domains?:number[],count?:number} }`
   → `{ attemptId, mode, expiresAt?, serverNow, scenarios?:{id,title,frame}[],
@@ -275,33 +290,50 @@ const verdict = (s:number)=> s>=GREEN?"green": s>=PASS?"amber":"red";
 ```
 
 ## III.6 Auth & identity (Auth-Engineer)
-- **Providers:** **GitHub (primary, first-tier, invite-free)** + optional custom Entra OIDC
-  (authority `https://login.microsoftonline.com/{tenantId}/v2.0`, **single-tenant**). Config
-  in `staticwebapp.config.json` `auth.identityProviders` with client-id/secret via **app
-  settings/Key Vault** (never in repo). A deployment may enable GitHub only, Entra only, or both.
-- **Authorization is invite-free by default via GitHub org/team membership.** `GetRoles`
-  supports two modes, selected by app settings:
-  - **`AUTHZ_MODE=github-org`** — grant `authorized` iff the caller (when
-    `identityProvider==="github"`) is a member of `GITHUB_ORG` (optionally `GITHUB_TEAM`).
-    Membership is checked via the GitHub API using a **read-only `read:org` token / GitHub App**
-    stored in Key Vault; results cached briefly. **Onboarding = add to the org; offboarding =
-    remove.** No emails, no allowlist edits. **Requires org setting "Require two-factor
-    authentication for everyone"** so this front door is MFA-backed (security-team baseline).
-  - **`AUTHZ_MODE=allowlist`** — grant from the **`AuthorizedUsers`** table (works for GitHub
-    usernames and Entra identities alike; still invite-free — you just add a row).
-  - Both may be combined (org membership **or** allowlist row → authorized), e.g. org for the
-    core team + allowlist for external guests.
-- **Cross-domain teammates / credential-less users (standing question):** if you use Entra,
-  admit them as **B2B guests** in the **existing tenant** (single-tenant app reg still admits
-  guests) with **email OTP** enabled — Appendix runbook. If you stay GitHub-only, external
-  collaborators simply need a GitHub account in your org/team (or an allowlist row). Do **not**
-  switch the Entra app reg to multi-tenant/personal accounts (wider attack surface).
-- **`rolesSource: "/api/GetRoles"`** — resolves `authorized`/`reviewer` per the mode above.
+- **Providers:** **Entra B2B (primary)** — custom OIDC, authority
+  `https://login.microsoftonline.com/{tenantId}/v2.0`, **single-tenant** (guests included) —
+  **plus GitHub (secondary)**. Config in `staticwebapp.config.json` `auth.identityProviders`
+  with client-id/secret via **app settings/Key Vault** (never in repo). A deployment may enable
+  Entra only, GitHub only, or both.
+- **Authorization (`GetRoles`), by app setting:**
+  - **`AUTHZ_MODE=allowlist`** (default with B2B) — grant from **`AuthorizedUsers`** where
+    `status="active"`; the row is created by the **self-service registration flow** (§III.6a),
+    not hand-composed invites. `admin` rows manage requests.
+  - **`AUTHZ_MODE=github-org`** (secondary) — grant `authorized` iff a GitHub caller is a member
+    of `GITHUB_ORG`(/`GITHUB_TEAM`), checked via a read-only `read:org` token/GitHub App in Key
+    Vault (cached). Requires org "**Require 2FA for everyone**." Onboarding = add to the org.
+  - Combinable (allowlist **or** org membership → authorized).
+- **Cross-domain / credential-less users:** admit them as **B2B guests** in the **existing
+  tenant** (single-tenant app reg still admits guests) with **email OTP / self-service sign-up**
+  enabled — they then self-register via §III.6a. Do **not** switch the app reg to
+  multi-tenant/personal accounts (wider attack surface).
+- **`rolesSource: "/api/GetRoles"`** — resolves `authorized`/`reviewer`/`admin` per the above.
 - **`staticwebapp.config.json`** ships: role-gated routes (`/api/*` and `/*` → `authorized`;
   `/login`,`/.auth/*` → anonymous), `responseOverrides` (401→/login, 403→/request-access.html),
   and **global security headers** (§III.7).
 - Server `auth.ts`: parse `x-ms-client-principal` (base64 JSON), require `authorized`, derive
   stable `userId`, expose helper `requireUser(req): {userId, roles}` used by every function.
+
+## III.6a Self-service registration & approval (Auth-Engineer, Frontend-Engineer)
+Goal: users onboard themselves; admins approve — **no hand-composed invites**.
+1. **Sign in without a pre-sent invite** — enable Entra **B2B self-service sign-up / email
+   OTP** (Appendix) so a first-time user authenticates via an emailed code; the guest object
+   is created on redemption. (GitHub org path needs no request flow — membership = access.)
+2. **Gate → Request access** — an authenticated user with no active role gets `403` →
+   `/request-access.html`. The page is prefilled from `/.auth/me` (name/email) and posts
+   `POST /api/access-requests` with an optional justification.
+3. **Decision** — if the email domain ∈ `AUTO_APPROVE_DOMAINS` → auto-approved instantly.
+   Otherwise an **`admin`** sees it in a minimal **Admin → Requests** view (or via a one-tap
+   approve link in a notification) and calls `POST /api/access-requests/{id}/decision`.
+4. **Result** — approved users re-enter authorized; deny/offboard = set `denied` / delete row.
+   Every transition is written to `Audit`.
+- **Admin view** is a small SPA panel gated by the `admin` role (lists pending, Approve/Deny).
+- **Config:** `AUTO_APPROVE_DOMAINS` (comma list), optional notification target (email/webhook).
+- **Native alternatives (documented, not default):** Entra **self-service sign-up user flows**
+  (optionally domain-restricted + API-connector approval); Entra **Entitlement Management
+  access packages** via the My Access portal (self-service request/approve — **requires Entra
+  ID Governance P2 licensing**, cost flag). Choose these only if you prefer a fully
+  Microsoft-native flow over the in-app one.
 
 ## III.7 Security controls (Security-Reviewer enforces in gates)
 - **Managed identity → Storage** in cloud (RBAC `Storage Table Data Contributor`, single
@@ -406,16 +438,20 @@ lint+typecheck+tests; `infra/main.bicep` + `infra/RUNBOOK.md` stubs.
 Azurite reachable; Playwright can load `/`.
 
 ## Phase 1 — Auth + security baseline  *(Auth-Engineer, Security-Reviewer, Test-Engineer)*
-Build: `GetRoles` with **both `AUTHZ_MODE=github-org` and `allowlist`** (+ `AuthorizedUsers`);
-GitHub (primary) + optional Entra providers in config; server `auth.ts` (principal parse,
-role/`userId`); `/request-access.html`; all security headers + CSP (no inline JS); rate-limit
+Build: `GetRoles` (`allowlist` default + `github-org`); `AuthorizedUsers`; **self-service
+registration** — `/request-access.html`, `POST /api/access-requests` (+ domain auto-approve),
+admin list + `/decision` endpoints, minimal **Admin→Requests** view (`admin`-gated); Entra B2B
+(primary) + GitHub (secondary) providers in config; server `auth.ts` (principal parse,
+role/`userId`, `status==="active"` check); all security headers + CSP (no inline JS); rate-limit
 middleware; audit logging; bicep for SWA Standard + Storage + Key Vault + MI role assignment;
-RUNBOOK for **GitHub org + enforced 2FA**, and (optional) Entra app reg + **B2B guest/email-OTP**
-+ secrets.
+RUNBOOK for **Entra app reg + B2B self-service sign-up/email-OTP + first admin seed**, and
+(secondary) GitHub org + enforced 2FA + secrets.
 **Gate (local via SWA CLI mock auth):** anonymous→login redirect, no app/data served;
-authenticated non-member/non-allowlisted→403; **org-member (github-org mode) → authorized**;
-allowlist row grants/revokes; `/api/*` without principal→401; header test asserts CSP/HSTS/etc.;
-rate-limit test returns 429.
+authenticated-with-no-role→403→request-access; submitting a request writes `pending`; an
+`admin` approving flips to `active`→authorized; **domain auto-approve** admits a matching email
+instantly; `pending`/`denied`→403; GitHub org-member (github-org mode)→authorized; `/api/*`
+without principal→401; access-request routes reject non-admin for list/decision; header test
+asserts CSP/HSTS/etc.; rate-limit test returns 429.
 
 ## Phase 2 — Server-side scoring + protection + CCAO-F migration  *(API-, Data-, Security-, Test-Engineer)*
 Build: `catalog`, `attempts*`, `answer`, `submit`, `history`, `cleanupTimer`; `scoring.ts`
@@ -468,22 +504,24 @@ sample re-verified); ≥200 unique items; study guide renders with working links
    TLS1.2+); Key Vault. (Or `az deployment group create -f infra/main.bicep`.)
 2. **Managed identity:** enable on the Functions/SWA; assign **Storage Table Data Contributor**
    scoped to the Storage account.
-3. **GitHub provider (primary, invite-free path):** register a GitHub OAuth app (or GitHub
-   App); redirect URI = SWA `/.auth/login/github/callback`; add client id/secret to SWA
-   settings. For **org-membership authorization** set `AUTHZ_MODE=github-org`, `GITHUB_ORG`
-   (+ optional `GITHUB_TEAM`), and a **read-only `read:org`** token / GitHub App creds in
-   **Key Vault**. In the GitHub org, enable **"Require two-factor authentication for everyone."**
-   Onboarding = add the person to the org/team; offboarding = remove them. No emails, no allowlist.
-4. **(Optional) Entra app registration** — only if you also want Entra SSO / credential-less
-   external users: single-tenant; redirect URI = SWA `/.auth/login/<provider>/callback`; client
-   secret → **Key Vault**; app settings (`AAD_CLIENT_ID`, `AAD_CLIENT_SECRET` ref, `TENANT_ID`).
-5. **(Optional) Cross-domain / credential-less via Entra:** External Identities → External
-   collaboration settings: allow guest invites; confirm **Email one-time passcode for guests =
-   enabled**; invite teammates as **guests** (single-tenant auth then admits them). Apply
-   **Conditional Access / MFA** to **All users + all guest/external users**.
-6. **Authorization:** `github-org` mode needs no per-user step. For `allowlist` mode (external
-   guests, or GitHub usernames), add each person to `AuthorizedUsers` (seed script/portal) —
-   not authorized until listed. Modes can be combined.
+3. **Entra app registration (primary):** single-tenant; redirect URI = SWA
+   `/.auth/login/<provider>/callback`; client secret → **Key Vault**; app settings
+   (`AAD_CLIENT_ID`, `AAD_CLIENT_SECRET` ref, `TENANT_ID`, `AUTHZ_MODE=allowlist`,
+   `AUTO_APPROVE_DOMAINS`).
+4. **Self-service registration (the "easy" onboarding):** Entra → External Identities → enable
+   **self-service sign-up** and confirm **Email one-time passcode for guests = enabled** so new
+   users authenticate via an emailed code with **no pre-sent invite**; the guest object is
+   created on first sign-in. Apply **Conditional Access / MFA** to **All users + all
+   guest/external users**. Users then self-register in-app (§III.6a); admins approve, or set
+   `AUTO_APPROVE_DOMAINS` for hands-off onboarding of your own domain.
+5. **Seed the first admin:** add one `AuthorizedUsers` row `{ role:"admin", status:"active" }`
+   (seed script) so there is someone to approve the first requests. (Native alternative if you
+   have Entra ID Governance P2: publish an **Entitlement Management access package** for
+   My-Access-portal self-service instead of the in-app flow.)
+6. **(Secondary) GitHub provider:** register a GitHub OAuth/App; redirect URI
+   `/.auth/login/github/callback`; add id/secret to settings. For org-membership authz set
+   `AUTHZ_MODE=github-org`+`GITHUB_ORG`(/`GITHUB_TEAM`) + a read-only `read:org` token in Key
+   Vault; enable org **"Require 2FA for everyone."** Onboarding = add to the org.
 7. **Secrets/CI:** SWA deploy token as GitHub Actions secret; separate scoped identity for
    `seed.yml`; enable Dependabot/CodeQL/secret scanning; protect `main`.
 8. **Deploy:** push to branch → Actions builds/deploys; run `seed.yml` (workflow_dispatch) to
