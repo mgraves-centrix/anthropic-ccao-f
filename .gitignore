@@ -6,3 +6,7 @@ local.settings.json
 __azurite_db*.json
 *.log
 .DS_Store
+
+test-results/
+playwright-report/
+.azurite-test/

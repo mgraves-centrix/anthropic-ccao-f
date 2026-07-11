@@ -14,5 +14,6 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["api/src/**/*.ts", "tests/**/*.ts"]
+  "include": ["api/src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["tests/e2e", "playwright.config.ts"]
 }
