@@ -86,6 +86,20 @@ test("mock: navigator + review-before-submit, then verdict", async ({ page }) =>
   await expect(page.locator(".verdict__score")).toContainText("780");
 });
 
+test("resume: in-progress attempt offers Resume / Start over and restores position", async ({ page }) => {
+  await page.route(/\/api\/attempts(\?|$)/, (r) => {
+    if (r.request().method() === "GET") {
+      return r.fulfill({ json: [{ attemptId: "a1", examId: "CCAO-F", mode: "mock", rev: 3, expiresAt: "2099-01-01T00:00:00Z", remainingMs: 3600000, questions: questions(2), progress: { currentIndex: 1, answers: { Q0: [0] }, flags: ["Q1"] } }] });
+    }
+    return r.fulfill({ json: { attemptId: "new", mode: "mock", expiresAt: "2099-01-01T00:00:00Z", questions: questions(1) } });
+  });
+  await page.goto("/#/exam/CCAO-F/mock");
+  await expect(page.getByRole("heading", { name: /Resume your mock/ })).toBeVisible();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.locator(".qstem")).toBeVisible();
+  await expect(page.locator(".runner__top .mono")).toContainText("2 / 2"); // restored to question 2
+});
+
 test("progress renders hand-rolled SVG charts", async ({ page }) => {
   await page.goto("/#/exam/CCAO-F/progress");
   await expect(page.locator("svg[role=img]").first()).toBeVisible();

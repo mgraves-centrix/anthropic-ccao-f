@@ -10,7 +10,7 @@
     "build:api": "tsc -p api/tsconfig.json",
     "test:azure": "RUN_AZURE=1 vitest run tests/integration/azure-tables.test.ts",
     "gate": "npm run typecheck && npm run test",
-    "test:e2e": "playwright test"
+    "test:e2e": "PW_CHROMIUM=/opt/pw-browsers/chromium playwright test"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

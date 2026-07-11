@@ -17,7 +17,7 @@ import {
 } from "./auth.js";
 
 export class ServiceError extends Error {
-  constructor(public status: number, msg: string) { super(msg); }
+  constructor(public status: number, msg: string, public data?: Record<string, unknown>) { super(msg); }
 }
 
 export interface Ctx {
@@ -206,7 +206,7 @@ export async function saveAttempt(
 ): Promise<{ ok: true; rev: number; savedAt: string; serverNow: string; expiresAt?: string }> {
   const a = await ctx.attempts.find(userId, attemptId);
   if (!a || a.status !== "in-progress") throw new ServiceError(404, "no in-progress attempt");
-  if (patch.rev !== a.rev) throw new ServiceError(409, "stale rev");
+  if (patch.rev !== a.rev) throw new ServiceError(409, "continued elsewhere", { rev: a.rev });
   a.progress = a.progress ?? { currentIndex: 0, answers: {}, flags: [], questionOrder: [], optionOrder: {} };
   if (patch.currentIndex !== undefined) a.progress.currentIndex = patch.currentIndex;
   if (patch.answers) a.progress.answers = patch.answers;
@@ -229,10 +229,31 @@ export async function resume(userId: string, examId: string | undefined, ctx: Ct
   for (const a of all) {
     if (a.status !== "in-progress") continue;
     const remainingMs = a.expiresAt ? Math.max(0, Date.parse(a.expiresAt) - t) : undefined;
-    out.push({
-      attemptId: a.attemptId, examId: a.examId, mode: a.mode,
-      expiresAt: a.expiresAt, remainingMs, progress: a.progress, // keys never stored here
-    });
+    // Rehydrate the questions (stems+options) in the recorded order — keys never included.
+    const order = a.progress?.questionOrder ?? [];
+    const optOrder = a.progress?.optionOrder ?? {};
+    const byId = new Map<string, QuestionRow>();
+    for (const qid of order) { const q = await ctx.questions.get(a.examId, qid); if (q) byId.set(qid, q); }
+    const questions = order.filter((qid) => byId.has(qid)).map((qid) => projectQuestion(byId.get(qid)!, optOrder[qid]));
+    let scenarios: AttemptPayload["scenarios"];
+    if (a.progress?.scenarioPick?.length) {
+      const scens = await ctx.scenarios.list(a.examId);
+      scenarios = a.progress.scenarioPick.map((sid) => scens.find((s) => s.scenarioId === sid)).filter(Boolean)
+        .map((s) => ({ id: s!.scenarioId, title: s!.title, frame: s!.frame }));
+    }
+    const entry: {
+      attemptId: string; examId: string; mode: AttemptRow["mode"]; rev: number;
+      expiresAt?: string; remainingMs?: number; questions: QuestionPublic[];
+      scenarios?: AttemptPayload["scenarios"];
+      progress: { currentIndex: number; answers: Record<string, number[]>; flags: string[] };
+    } = {
+      attemptId: a.attemptId, examId: a.examId, mode: a.mode, rev: a.rev, questions,
+      progress: { currentIndex: a.progress?.currentIndex ?? 0, answers: a.progress?.answers ?? {}, flags: a.progress?.flags ?? [] },
+    };
+    if (a.expiresAt) entry.expiresAt = a.expiresAt;
+    if (remainingMs !== undefined) entry.remainingMs = remainingMs;
+    if (scenarios) entry.scenarios = scenarios;
+    out.push(entry);
   }
   return out;
 }

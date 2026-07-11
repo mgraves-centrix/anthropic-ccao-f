@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [claude/deployment-capability-rfm02p]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Typecheck + unit/integration gate
+        run: npm run gate
+      - name: Build API
+        run: npm run build:api
+      - name: Validate content banks
+        run: |
+          for e in ccao-f ccdv-f ccar-f ccar-p; do node data/tools/validate.mjs data/$e; done
+      - name: Azure table integration (Azurite)
+        run: npm run test:azure
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: E2E (Playwright)
+        run: npx playwright test

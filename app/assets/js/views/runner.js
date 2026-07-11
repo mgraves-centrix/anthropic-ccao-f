@@ -1,6 +1,7 @@
-// Practice/Mock question runner + results (spec §III.8/§10). Practice gives
-// instant feedback; Mock withholds until submit and shows a live timer anchored
-// to the server expiresAt. Results show the verdict banner + study recommendations.
+// Practice/Mock question runner + results (spec §III.8/§9/§10). Practice gives
+// instant feedback; Mock withholds until submit with a server-anchored timer.
+// Supports server-authoritative RESUME (Resume / Start over) and surfaces the
+// two-tab/two-device conflict (409 -> load latest / overwrite).
 import { api } from "../api.js";
 import { renderDomainBars } from "../charts/domainBars.js";
 import { go } from "../router.js";
@@ -8,21 +9,48 @@ import { esc, safeHref } from "../util.js";
 import { renderReview } from "./review.js";
 
 export async function renderRunner(host, { examId, mode, filters }) {
-  host.innerHTML = `<div class="card"><p class="loading">Preparing your ${esc(mode)}…</p></div>`;
-  let att;
-  try {
-    att = await api.createAttempt(examId, mode, mode === "practice" ? (filters || { count: 10 }) : undefined);
-  } catch (e) {
-    host.innerHTML = `<div class="card"><p>Could not start: ${esc(e.message)}</p>` +
-      (e.status === 409 ? `<p class="muted">Nothing matches this selection yet — take some questions first.</p>` : "") + `</div>`;
-    return;
+  host.innerHTML = `<div class="card"><p class="loading">Checking for an in-progress ${esc(mode)}…</p></div>`;
+  let existing = [];
+  try { existing = (await api.resume(examId)).filter((a) => a.mode === mode); } catch { /* offline / none */ }
+  if (existing.length) return promptResume(host, examId, mode, filters, existing[0]);
+  return start(host, examId, mode, filters, null);
+}
+
+// Spec §9: closing the tab mid-session must offer Resume / Start over.
+function promptResume(host, examId, mode, filters, att) {
+  const answered = Object.values(att.progress?.answers || {}).filter((a) => a?.length).length;
+  const remain = att.remainingMs != null ? ` · ${Math.ceil(att.remainingMs / 60000)} min left` : "";
+  host.innerHTML =
+    `<div class="card"><h3>Resume your ${esc(mode)}?</h3>` +
+    `<p>You have an in-progress ${esc(mode)} — ${answered}/${att.questions.length} answered${remain}.</p>` +
+    (mode === "mock" ? `<p class="muted">The mock timer kept running while you were away.</p>` : "") +
+    `<div class="runner__nav"><button class="btn btn--primary" id="resumeBtn">Resume</button>` +
+    `<button class="btn" id="startoverBtn">Start over</button></div></div>`;
+  host.querySelector("#resumeBtn").addEventListener("click", () => start(host, examId, mode, filters, att));
+  host.querySelector("#startoverBtn").addEventListener("click", () => start(host, examId, mode, filters, null));
+}
+
+async function start(host, examId, mode, filters, resumed) {
+  let att = resumed;
+  if (!att) {
+    host.innerHTML = `<div class="card"><p class="loading">Preparing your ${esc(mode)}…</p></div>`;
+    try { att = await api.createAttempt(examId, mode, mode === "practice" ? (filters || { count: 10 }) : undefined); }
+    catch (e) {
+      host.innerHTML = `<div class="card"><p>Could not start: ${esc(e.message)}</p>` +
+        (e.status === 409 ? `<p class="muted">Nothing matches this selection yet — take some questions first.</p>` : "") + `</div>`;
+      return;
+    }
   }
-  const S = { qs: att.questions, idx: 0, answers: {}, flags: new Set(), rev: 1, attemptId: att.attemptId, feedback: {}, bookmarked: new Set() };
+  const S = {
+    qs: att.questions, idx: att.progress?.currentIndex ?? 0,
+    answers: { ...(att.progress?.answers || {}) }, flags: new Set(att.progress?.flags || []),
+    rev: att.rev ?? 1, attemptId: att.attemptId, feedback: {}, bookmarked: new Set(), conflict: false,
+  };
   api.bookmarkList(examId).then((bs) => { S.bookmarked = new Set(bs.map((b) => b.qid)); draw(); }).catch(() => {});
   let timer = null;
-  if (mode === "mock" && att.expiresAt) startTimer(host, att.expiresAt, () => finish(true));
+  if (mode === "mock" && att.expiresAt) startTimer(att.expiresAt, () => finish(true));
 
-  function startTimer(_h, expiresAt, onExpire) {
+  function startTimer(expiresAt, onExpire) {
     const tick = () => {
       const ms = Date.parse(expiresAt) - Date.now();
       const t = document.getElementById("mockTimer");
@@ -34,8 +62,40 @@ export async function renderRunner(host, { examId, mode, filters }) {
   }
 
   async function save() {
-    try { const r = await api.save(S.attemptId, { rev: S.rev, currentIndex: S.idx, answers: S.answers, flags: [...S.flags] }); S.rev = r.rev; }
-    catch { /* offline cache tolerated; server is source of truth */ }
+    try {
+      const r = await api.save(S.attemptId, { rev: S.rev, currentIndex: S.idx, answers: S.answers, flags: [...S.flags] });
+      S.rev = r.rev;
+    } catch (e) {
+      if (e.status === 409) handleConflict(e); // continued on another device
+      // else: offline cache tolerated; server is source of truth
+    }
+  }
+
+  // Spec §9: two-tab/two-device conflict — surface, don't silently clobber.
+  function handleConflict(e) {
+    if (S.conflict) return;
+    S.conflict = true;
+    const bar = document.createElement("div");
+    bar.className = "conflict-bar";
+    bar.innerHTML = `<span>⚠ This attempt was continued on another device.</span> ` +
+      `<button class="btn" data-load>Load latest</button> <button class="btn" data-over>Overwrite</button>`;
+    host.prepend(bar);
+    bar.querySelector("[data-load]").addEventListener("click", async () => { bar.remove(); S.conflict = false; await reloadFromServer(); });
+    bar.querySelector("[data-over]").addEventListener("click", async () => {
+      bar.remove(); S.conflict = false;
+      if (e.data?.rev != null) S.rev = e.data.rev; // adopt server rev, then re-save our state
+      await save();
+    });
+  }
+
+  async function reloadFromServer() {
+    try {
+      const list = (await api.resume(examId)).filter((a) => a.attemptId === S.attemptId);
+      if (!list.length) { host.innerHTML = `<div class="card"><p>This attempt was finished elsewhere.</p><button class="btn" id="bk">Back</button></div>`; host.querySelector("#bk").addEventListener("click", () => go(`#/exam/${encodeURIComponent(examId)}/home`)); return; }
+      const a = list[0];
+      S.qs = a.questions; S.idx = a.progress.currentIndex; S.answers = { ...a.progress.answers }; S.flags = new Set(a.progress.flags); S.rev = a.rev;
+      draw();
+    } catch { /* ignore */ }
   }
 
   function select(qid, i, type) {
@@ -43,14 +103,23 @@ export async function renderRunner(host, { examId, mode, filters }) {
     if (type === "single") { S.answers[qid] = [i]; }
     else { cur.has(i) ? cur.delete(i) : cur.add(i); S.answers[qid] = [...cur]; }
     if (mode === "practice") return practiceFeedback(qid);
-    draw();
+    save(); draw();
   }
 
   async function practiceFeedback(qid) {
-    try {
-      S.feedback[qid] = await api.answer(S.attemptId, qid, S.answers[qid]);
-    } catch { /* ignore */ }
-    draw();
+    try { S.feedback[qid] = await api.answer(S.attemptId, qid, S.answers[qid]); } catch { /* ignore */ }
+    save(); draw();
+  }
+
+  function navmap() {
+    return `<div class="navmap" role="group" aria-label="Question navigator">` +
+      S.qs.map((qq, i) => {
+        const answered = (S.answers[qq.qid]?.length ?? 0) > 0;
+        const flagged = S.flags.has(qq.qid);
+        const cls = `navdot${answered ? " answered" : ""}${flagged ? " flagged" : ""}${i === S.idx ? " current" : ""}`;
+        const label = `Question ${i + 1}${answered ? ", answered" : ", unanswered"}${flagged ? ", flagged for review" : ""}${i === S.idx ? ", current" : ""}`;
+        return `<button class="${cls}" data-goto="${i}" aria-label="${label}"${i === S.idx ? ' aria-current="true"' : ""}>${i + 1}${flagged ? '<span aria-hidden="true">⚑</span>' : ""}</button>`;
+      }).join("") + `</div>`;
   }
 
   function draw() {
@@ -83,9 +152,7 @@ export async function renderRunner(host, { examId, mode, filters }) {
       `<button class="btn${S.flags.has(q.qid) ? " is-flagged" : ""}" data-nav="flag">${S.flags.has(q.qid) ? "Unflag" : "⚑ Flag for review"}</button>` +
       `<button class="btn" data-nav="next" ${S.idx >= S.qs.length - 1 ? "disabled" : ""}>Next</button>` +
       `<button class="btn btn--primary" data-nav="submit">Review &amp; submit</button>` +
-      `</div>` +
-      navmap() +
-      `</div>`;
+      `</div>` + navmap() + `</div>`;
 
     host.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => select(q.qid, Number(b.dataset.i), type)));
     host.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => nav(b.dataset.nav, q.qid)));
@@ -100,18 +167,6 @@ export async function renderRunner(host, { examId, mode, filters }) {
     });
   }
 
-  // Question navigator palette: jump to any question; shows answered/flagged/current.
-  function navmap() {
-    return `<div class="navmap" role="group" aria-label="Question navigator">` +
-      S.qs.map((qq, i) => {
-        const answered = (S.answers[qq.qid]?.length ?? 0) > 0;
-        const flagged = S.flags.has(qq.qid);
-        const cls = `navdot${answered ? " answered" : ""}${flagged ? " flagged" : ""}${i === S.idx ? " current" : ""}`;
-        const label = `Question ${i + 1}${answered ? ", answered" : ", unanswered"}${flagged ? ", flagged for review" : ""}${i === S.idx ? ", current" : ""}`;
-        return `<button class="${cls}" data-goto="${i}" aria-label="${label}"${i === S.idx ? ' aria-current="true"' : ""}>${i + 1}${flagged ? "<span aria-hidden=\"true\">⚑</span>" : ""}</button>`;
-      }).join("") + `</div>`;
-  }
-
   async function nav(action, qid) {
     if (action === "flag") { S.flags.has(qid) ? S.flags.delete(qid) : S.flags.add(qid); await save(); return draw(); }
     if (action === "prev") { S.idx = Math.max(0, S.idx - 1); await save(); return draw(); }
@@ -119,16 +174,10 @@ export async function renderRunner(host, { examId, mode, filters }) {
     if (action === "submit") return reviewBeforeSubmit();
   }
 
-  // Pre-submit review: surface unanswered + flagged questions with jump links,
-  // so nothing is submitted by accident. Confirm required to submit.
   async function reviewBeforeSubmit() {
     await save();
-    const unanswered = [];
-    const flagged = [];
-    S.qs.forEach((q, i) => {
-      if (!(S.answers[q.qid]?.length)) unanswered.push(i);
-      if (S.flags.has(q.qid)) flagged.push(i);
-    });
+    const unanswered = [], flagged = [];
+    S.qs.forEach((q, i) => { if (!(S.answers[q.qid]?.length)) unanswered.push(i); if (S.flags.has(q.qid)) flagged.push(i); });
     const dots = (list, extra) => `<div class="navmap">` + list.map((i) =>
       `<button class="navdot${extra}${(S.answers[S.qs[i].qid]?.length) ? " answered" : ""}" data-goto="${i}">${i + 1}</button>`).join("") + `</div>`;
     host.innerHTML =
@@ -165,7 +214,7 @@ export function renderResults(host, examId, res, auto, attemptId) {
   const recs = res.weakDomains?.length
     ? `<div class="card recs"><h3>Study recommendations</h3><p class="muted">Biggest score levers first.</p><ul>` +
       res.weakDomains.map((d) =>
-        `<li><a href="#/exam/${encodeURIComponent(examId)}/study">${esc(d.name)}</a> — ${d.pct}% (weight ${d.weight}%) <span class="mono">study this →</span></li>`
+        `<li><a href="#/exam/${encodeURIComponent(examId)}/study#study-domain-${d.id}">${esc(d.name)}</a> — ${d.pct}% (weight ${d.weight}%) <span class="mono">study this →</span></li>`
       ).join("") + `</ul></div>`
     : "";
   host.innerHTML =

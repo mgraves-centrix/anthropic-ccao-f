@@ -91,12 +91,17 @@ describe("resume + two-tab conflict", () => {
     const o = opts();
     const att = await createAttempt(U, "STD", "practice", { count: 4 }, ctx, o);
     const stored = await ctx.attempts.find(U, att.attemptId);
+    await saveAttempt(U, att.attemptId, { rev: 1, currentIndex: 2, answers: { [att.questions[0]!.qid]: [1] } }, ctx, o); // rev→2
+    // resume rehydrates questions (in order) + restored position/answers, no keys
     const r = await resume(U, "STD", ctx, o);
-    expect(r[0]!.progress!.questionOrder).toEqual(stored!.progress!.questionOrder);
+    expect(r[0]!.questions.map((q) => q.qid)).toEqual(stored!.progress!.questionOrder);
+    expect(r[0]!.progress.currentIndex).toBe(2);
+    expect(r[0]!.rev).toBe(2);
+    expect(JSON.stringify(r)).not.toMatch(/"correct"|rationale|referenceUrl/);
 
-    await saveAttempt(U, att.attemptId, { rev: 1, currentIndex: 2 }, ctx, o); // rev→2
+    // stale rev → 409 carrying the authoritative server rev (two-tab conflict)
     await expect(saveAttempt(U, att.attemptId, { rev: 1, currentIndex: 3 }, ctx, o))
-      .rejects.toMatchObject({ status: 409 });
+      .rejects.toMatchObject({ status: 409, data: { rev: 2 } });
   });
 });
 

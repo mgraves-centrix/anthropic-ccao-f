@@ -121,3 +121,4 @@ a { color: var(--accent-ink); }
 .navdot.flagged { border-color: var(--amber); color: var(--amber); }
 .navdot.current { outline: 2px solid var(--focus); outline-offset: 1px; font-weight: 700; }
 .btn.is-flagged { border-color: var(--amber); color: var(--amber); }
+.conflict-bar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; background: var(--amber-tint); border: 1px solid var(--amber); color: var(--ink); padding: .5rem .8rem; border-radius: var(--r-sm); margin-bottom: .8rem; }

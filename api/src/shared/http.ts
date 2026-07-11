@@ -63,7 +63,8 @@ export async function handle(fn: () => Promise<HttpResponseInit>): Promise<HttpR
     // Only surface messages for intentional (4xx) errors; never leak internal 5xx detail.
     const message = status >= 500 ? "internal error" : ((e as { message?: string }).message ?? "error");
     const headers = (e as { headers?: Record<string, string> }).headers;
-    return json(status, { error: message }, headers);
+    const data = status < 500 ? (e as { data?: Record<string, unknown> }).data : undefined;
+    return json(status, { error: message, ...(data ?? {}) }, headers);
   }
 }
 
