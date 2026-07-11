@@ -75,6 +75,14 @@ describe("practice instant feedback", () => {
     expect(fb.correct).toBe(true);
     expect(fb.rationale).toContain("reason");
   });
+
+  it("rejects answering a qid NOT in the attempt (no key harvesting)", async () => {
+    const ctx = await buildCtx();
+    const att = await createAttempt(U, "STD", "practice", { count: 4, domains: [1] }, ctx, opts());
+    const inAttempt = new Set(att.questions.map((q) => q.qid));
+    const foreign = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"].find((q) => !inAttempt.has(q))!;
+    await expect(practiceAnswer(U, att.attemptId, foreign, [0], ctx)).rejects.toMatchObject({ status: 404 });
+  });
 });
 
 describe("resume + two-tab conflict", () => {

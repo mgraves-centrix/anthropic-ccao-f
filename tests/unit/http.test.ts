@@ -78,9 +78,10 @@ describe("handle — error → status mapping", () => {
     const res = await handle(async () => { throw Object.assign(new Error("stale"), { status: 409 }); });
     expect(res.status).toBe(409);
   });
-  it("defaults to 500 for an unknown error", async () => {
-    const res = await handle(async () => { throw new Error("boom"); });
+  it("defaults to 500 and hides internal detail", async () => {
+    const res = await handle(async () => { throw new Error("secret DB connection string boom"); });
     expect(res.status).toBe(500);
+    expect((res as { jsonBody: { error: string } }).jsonBody.error).toBe("internal error");
   });
 });
 

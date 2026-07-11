@@ -19,7 +19,7 @@ export const prefersReducedMotion = () =>
 /** Wrap chart body in a responsive, accessible <svg>. */
 export const svg = (viewBox, ariaLabel, body) =>
   `<svg viewBox="${viewBox}" role="img" aria-label="${esc(ariaLabel)}" ` +
-  `preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block">${body}</svg>`;
+  `preserveAspectRatio="xMidYMid meet" class="chart-svg">${body}</svg>`;
 
 export const emptyState = (msg) =>
   `<div class="chart-empty" role="img" aria-label="${esc(msg)}">${esc(msg)}</div>`;

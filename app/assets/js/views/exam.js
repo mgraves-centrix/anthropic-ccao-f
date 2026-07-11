@@ -4,8 +4,7 @@ import { api } from "../api.js";
 import { go } from "../router.js";
 import { renderProgress } from "./progress.js";
 import { renderRunner } from "./runner.js";
-
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+import { esc, safeHref } from "../util.js";
 const TABS = [["home", "Home"], ["practice", "Practice"], ["mock", "Mock"], ["study", "Study"], ["progress", "Progress"]];
 let catalogCache = null;
 
@@ -81,7 +80,7 @@ function renderSection(sec) {
   }
   // generic: domain notes with links/courses if present
   const links = Array.isArray(sec.links)
-    ? `<ul>${sec.links.map((l) => `<li><a href="${esc(l.url || l[1] || "#")}" target="_blank" rel="noreferrer">${esc(l.label || l[0] || l.url)}</a></li>`).join("")}</ul>` : "";
+    ? `<ul>${sec.links.map((l) => `<li><a href="${esc(safeHref(l.url || l[1]))}" target="_blank" rel="noreferrer">${esc(l.label || l[0] || l.url)}</a></li>`).join("")}</ul>` : "";
   const notes = Array.isArray(sec.body) ? sec.body.map((p) => `<p>${esc(p)}</p>`).join("")
     : sec.body ? `<p>${esc(sec.body)}</p>` : "";
   const items = Array.isArray(sec.items) && !sec.kind

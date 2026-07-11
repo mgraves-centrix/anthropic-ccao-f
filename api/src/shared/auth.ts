@@ -64,6 +64,33 @@ export interface AuthConfig {
 /** Optional injected GitHub org-membership check (kept out of core for testability). */
 export type OrgMembershipCheck = (githubLogin: string) => Promise<boolean>;
 
+/**
+ * Build a real GitHub org/team membership check (spec §III.6 github-org mode).
+ * Uses a read-only token; fails CLOSED on any error. fetchImpl is injectable for tests.
+ */
+export function makeGithubOrgCheck(
+  token: string, org: string, team?: string, fetchImpl: typeof fetch = fetch,
+): OrgMembershipCheck {
+  return async (login: string): Promise<boolean> => {
+    if (!login || !token || !org) return false;
+    const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "cert-portal" };
+    try {
+      if (team) {
+        const url = `https://api.github.com/orgs/${encodeURIComponent(org)}/teams/${encodeURIComponent(team)}/memberships/${encodeURIComponent(login)}`;
+        const r = await fetchImpl(url, { headers });
+        if (!r.ok) return false;
+        const b = (await r.json().catch(() => ({}))) as { state?: string };
+        return b.state === "active";
+      }
+      const url = `https://api.github.com/orgs/${encodeURIComponent(org)}/members/${encodeURIComponent(login)}`;
+      const r = await fetchImpl(url, { headers });
+      return r.status === 204; // 204 = member, 404 = not a member
+    } catch {
+      return false; // fail closed
+    }
+  };
+}
+
 /** Resolve the caller's custom roles (rolesSource=/api/GetRoles). Never trusts client roles. */
 export async function resolveRoles(
   p: ClientPrincipal,

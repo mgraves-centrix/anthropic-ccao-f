@@ -94,3 +94,5 @@ a { color: var(--accent-ink); }
 .reqrow { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .6rem; }
 .reqrow__actions { display: flex; gap: .4rem; flex-shrink: 0; }
 .adminlink { margin-right: .5rem; font-weight: 600; }
+.chart-svg { width: 100%; height: auto; display: block; }
+.ra-textarea { width: 100%; }

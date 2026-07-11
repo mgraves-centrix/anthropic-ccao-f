@@ -39,7 +39,15 @@ export function requireAuthed(req: HttpRequest): ClientPrincipal {
  * `routeKey` selects a bucket in LIMITS; omit to skip rate limiting.
  */
 export function enforce(req: HttpRequest, role: Role, routeKey?: keyof typeof LIMITS): ClientPrincipal {
-  const p = require(req, role);
+  return rateLimit(require(req, role), routeKey);
+}
+
+/** Like enforce but only requires authentication (used by self-service access requests). */
+export function enforceAuthed(req: HttpRequest, routeKey?: keyof typeof LIMITS): ClientPrincipal {
+  return rateLimit(requireAuthed(req), routeKey);
+}
+
+function rateLimit(p: ClientPrincipal, routeKey?: keyof typeof LIMITS): ClientPrincipal {
   if (routeKey) {
     const r = limiter.check(p.userId, routeKey, LIMITS[routeKey]);
     if (!r.ok) throw new HttpError(429, "rate limit exceeded", { "Retry-After": String(Math.ceil(r.retryAfterMs / 1000)) });
@@ -52,7 +60,8 @@ export async function handle(fn: () => Promise<HttpResponseInit>): Promise<HttpR
     return await fn();
   } catch (e: unknown) {
     const status = (e as { status?: number }).status ?? 500;
-    const message = (e as { message?: string }).message ?? "error";
+    // Only surface messages for intentional (4xx) errors; never leak internal 5xx detail.
+    const message = status >= 500 ? "internal error" : ((e as { message?: string }).message ?? "error");
     const headers = (e as { headers?: Record<string, string> }).headers;
     return json(status, { error: message }, headers);
   }

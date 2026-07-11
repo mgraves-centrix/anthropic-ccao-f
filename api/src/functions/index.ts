@@ -2,9 +2,9 @@
 // service layer. authLevel is 'anonymous' because SWA EasyAuth + staticwebapp
 // route roles gate access; each handler re-derives principal/roles server-side.
 import { app, type HttpResponseInit } from "@azure/functions";
-import { json, handle, requireAuthed, enforce, body } from "../shared/http.js";
+import { json, handle, enforceAuthed, enforce, body } from "../shared/http.js";
 import { ctxFromEnv, authConfig, auditRepo } from "../shared/context.js";
-import { resolveRoles, type ClientPrincipal } from "../shared/auth.js";
+import { resolveRoles, makeGithubOrgCheck, type ClientPrincipal } from "../shared/auth.js";
 import { audit } from "../shared/audit.js";
 import * as svc from "../shared/service.js";
 
@@ -14,7 +14,11 @@ app.http("GetRoles", {
   handler: (req) => handle(async () => {
     const p = (await body<ClientPrincipal>(req));
     if (!p?.userId) return json(200, { roles: [] });
-    const roles = await resolveRoles(p, ctxFromEnv().users, authConfig());
+    const cfg = authConfig();
+    const orgCheck = (cfg.authzMode === "github-org" || cfg.authzMode === "both") && cfg.githubOrg && process.env.GITHUB_TOKEN
+      ? makeGithubOrgCheck(process.env.GITHUB_TOKEN, cfg.githubOrg, cfg.githubTeam)
+      : undefined;
+    const roles = await resolveRoles(p, ctxFromEnv().users, cfg, orgCheck);
     return json(200, { roles });
   }),
 });
@@ -23,7 +27,7 @@ app.http("GetRoles", {
 app.http("accessRequestCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "access-requests",
   handler: (req) => handle(async () => {
-    const p = requireAuthed(req);
+    const p = enforceAuthed(req, "read");
     const { justification } = await body<{ justification?: string }>(req);
     return json(200, await svc.accessRequest(p, justification ?? "", ctxFromEnv(), authConfig()));
   }),

@@ -4,8 +4,7 @@
 import { api } from "../api.js";
 import { renderDomainBars } from "../charts/domainBars.js";
 import { go } from "../router.js";
-
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+import { esc, safeHref } from "../util.js";
 
 export async function renderRunner(host, { examId, mode }) {
   host.innerHTML = `<div class="card"><p class="loading">Preparing your ${esc(mode)}…</p></div>`;
@@ -71,7 +70,7 @@ export async function renderRunner(host, { examId, mode }) {
       (type === "multiple" ? `<p class="mono muted">Select ${q.selectCount || "all that apply"}.</p>` : "") +
       `<div class="opts">${opts}</div>` +
       (fb ? `<div class="rationale ${fb.correct ? "right" : "wrong"}"><strong>${fb.correct ? "Correct" : "Not quite"}.</strong> ${esc(fb.rationale)}` +
-        (fb.reference?.url ? ` <a href="${esc(fb.reference.url)}" target="_blank" rel="noreferrer">${esc(fb.reference.text || "reference")}</a>` : "") + `</div>` : "") +
+        (fb.reference?.url ? ` <a href="${esc(safeHref(fb.reference.url))}" target="_blank" rel="noreferrer">${esc(fb.reference.text || "reference")}</a>` : "") + `</div>` : "") +
       `</div>` +
       `<div class="runner__nav">` +
       `<button class="btn" data-nav="prev" ${S.idx === 0 ? "disabled" : ""}>Prev</button>` +

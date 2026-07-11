@@ -214,6 +214,9 @@ export async function practiceAnswer(
   const a = await ctx.attempts.find(userId, attemptId);
   if (!a) throw new ServiceError(404, "attempt not found");
   if (a.mode !== "practice") throw new ServiceError(403, "feedback withheld until submit");
+  // Only questions that are actually part of THIS attempt may be answered — prevents
+  // harvesting the exam's answer key by passing arbitrary qids to /answer.
+  if (!a.progress?.questionOrder?.includes(qid)) throw new ServiceError(404, "question not in attempt");
   const q = await ctx.questions.get(a.examId, qid);
   if (!q) throw new ServiceError(404, "question not found");
   const orig = toOriginal(answer, a.progress?.optionOrder?.[qid]);
