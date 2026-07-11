@@ -16,7 +16,7 @@ export function parseHash() {
 
 export function go(path) { location.hash = path; }
 
-export async function mount(el) {
+export async function mount(el, { moveFocus = false } = {}) {
   const route = parseHash();
   const render = routes.get(route.view) || routes.get("catalog");
   el.setAttribute("aria-busy", "true");
@@ -27,9 +27,19 @@ export async function mount(el) {
   } finally {
     el.removeAttribute("aria-busy");
   }
+  // SPA a11y: on navigation move focus to the new view's heading so keyboard and
+  // screen-reader users are placed at the fresh content instead of stranded.
+  if (moveFocus) focusHeading(el);
+}
+
+function focusHeading(el) {
+  const h = el.querySelector("h1, h2, h3");
+  if (!h) return;
+  if (!h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1");
+  h.focus({ preventScroll: false });
 }
 
 export function startRouter(el) {
-  window.addEventListener("hashchange", () => mount(el));
+  window.addEventListener("hashchange", () => mount(el, { moveFocus: true }));
   return mount(el);
 }

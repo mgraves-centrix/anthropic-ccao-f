@@ -73,21 +73,43 @@ async function start(host, examId, mode, filters, resumed) {
   }
 
   function startTimer(expiresAt, onExpire) {
+    let warned5 = false, warned1 = false;
     const tick = () => {
       const ms = Date.parse(expiresAt) - Date.now();
       const t = document.getElementById("mockTimer");
       if (ms <= 0) { if (t) t.textContent = "0:00"; clearInterval(timer); onExpire(); return; }
       const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
-      if (t) t.textContent = `${m}:${String(s).padStart(2, "0")}`;
+      if (t) {
+        t.textContent = `${m}:${String(s).padStart(2, "0")}`;
+        // Escalating urgency: amber under 5 min, red under 1 min (exam realism).
+        t.classList.toggle("timer--warn", ms <= 300000 && ms > 60000);
+        t.classList.toggle("timer--crit", ms <= 60000);
+      }
+      // Announce the two thresholds once (not every second — that would spam SR).
+      if (!warned5 && ms <= 300000) { warned5 = true; toast("5 minutes remaining", "warn"); announce("5 minutes remaining"); }
+      if (!warned1 && ms <= 60000) { warned1 = true; toast("1 minute remaining", "warn"); announce("1 minute remaining"); }
     };
     tick(); timer = setInterval(tick, 1000);
   }
 
+  function setSaveState(state) {
+    S.saveState = state;
+    const el = document.getElementById("saveState");
+    if (!el) return;
+    if (state === "saving") { el.textContent = "Saving…"; el.className = "savestate is-saving"; }
+    else if (state === "saved") { el.textContent = "Saved"; el.className = "savestate is-saved"; }
+    else if (state === "error") { el.textContent = "Not saved"; el.className = "savestate is-error"; }
+    else { el.textContent = ""; el.className = "savestate"; }
+  }
+
   async function save() {
+    setSaveState("saving");
     try {
       const r = await api.save(S.attemptId, { rev: S.rev, currentIndex: S.idx, answers: S.answers, flags: [...S.flags] });
       S.rev = r.rev;
+      setSaveState("saved");
     } catch (e) {
+      setSaveState("error");
       if (e.status === 409) handleConflict(e); // continued on another device
       // else: offline cache tolerated; server is source of truth
     }
@@ -161,6 +183,7 @@ async function start(host, examId, mode, filters, resumed) {
       `<div class="runner__top"><span class="pill">${esc(examId)}</span>` +
       `<span class="mono">${S.idx + 1} / ${S.qs.length}</span>` +
       `<button class="bmk${marked ? " on" : ""}" data-bmk aria-pressed="${marked}" title="Bookmark this question">${marked ? "★" : "☆"}</button>` +
+      `<span id="saveState" class="savestate" aria-live="polite"></span>` +
       `${timerHtml}</div>` +
       (q.scenarioId ? `<div class="scenario-frame mono">Scenario ${esc(q.scenarioId)}</div>` : "") +
       `<div class="card qcard"><p class="qstem">${esc(q.stem)}</p>` +
@@ -190,6 +213,7 @@ async function start(host, examId, mode, filters, resumed) {
         draw();
       } catch { /* ignore */ }
     });
+    if (S.saveState) setSaveState(S.saveState); // survive re-render
     const answered = (S.answers[q.qid]?.length ?? 0) > 0;
     announce(`Question ${S.idx + 1} of ${S.qs.length}${answered ? ", answered" : ""}${S.flags.has(q.qid) ? ", flagged" : ""}`);
   }
