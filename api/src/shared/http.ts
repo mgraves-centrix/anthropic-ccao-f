@@ -5,6 +5,7 @@ import type { HttpRequest, HttpResponseInit } from "@azure/functions";
 import { parsePrincipal, hasRole, type ClientPrincipal } from "./auth.js";
 import type { Role } from "./types.js";
 import { limiter, LIMITS } from "./ratelimit.js";
+import { durableLimiter } from "./context.js";
 
 export function principalOf(req: HttpRequest): ClientPrincipal | null {
   return parsePrincipal(req.headers.get("x-ms-client-principal"));
@@ -38,21 +39,34 @@ export function requireAuthed(req: HttpRequest): ClientPrincipal {
  * principal or throws 401/403/429 (429 carries a Retry-After header).
  * `routeKey` selects a bucket in LIMITS; omit to skip rate limiting.
  */
-export function enforce(req: HttpRequest, role: Role, routeKey?: keyof typeof LIMITS): ClientPrincipal {
+export function enforce(req: HttpRequest, role: Role, routeKey?: keyof typeof LIMITS): Promise<ClientPrincipal> {
   return rateLimit(require(req, role), routeKey);
 }
 
 /** Like enforce but only requires authentication (used by self-service access requests). */
-export function enforceAuthed(req: HttpRequest, routeKey?: keyof typeof LIMITS): ClientPrincipal {
+export function enforceAuthed(req: HttpRequest, routeKey?: keyof typeof LIMITS): Promise<ClientPrincipal> {
   return rateLimit(requireAuthed(req), routeKey);
 }
 
-function rateLimit(p: ClientPrincipal, routeKey?: keyof typeof LIMITS): ClientPrincipal {
-  if (routeKey) {
-    const r = limiter.check(p.userId, routeKey, LIMITS[routeKey]);
-    if (!r.ok) throw new HttpError(429, "rate limit exceeded", { "Retry-After": String(Math.ceil(r.retryAfterMs / 1000)) });
+async function rateLimit(p: ClientPrincipal, routeKey?: keyof typeof LIMITS): Promise<ClientPrincipal> {
+  if (!routeKey) return p;
+  const spec = LIMITS[routeKey];
+  // In-memory tier first: cheap, zero-I/O, and short-circuits abuse per instance.
+  const local = limiter.check(p.userId, routeKey, spec);
+  if (!local.ok) throw tooMany(local.retryAfterMs);
+  // Durable tier for the security-sensitive buckets, if a Table backend exists.
+  if (spec.durable) {
+    const durable = durableLimiter();
+    if (durable) {
+      const r = await durable.check(p.userId, routeKey, spec);
+      if (!r.ok) throw tooMany(r.retryAfterMs);
+    }
   }
   return p;
+}
+
+function tooMany(retryAfterMs: number): HttpError {
+  return new HttpError(429, "rate limit exceeded", { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) });
 }
 
 export async function handle(fn: () => Promise<HttpResponseInit>): Promise<HttpResponseInit> {

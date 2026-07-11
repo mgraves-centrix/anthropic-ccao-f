@@ -27,7 +27,7 @@ app.http("GetRoles", {
 app.http("accessRequestCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "access-requests",
   handler: (req) => handle(async () => {
-    const p = enforceAuthed(req, "read");
+    const p = await enforceAuthed(req, "read");
     const { justification } = await body<{ justification?: string }>(req);
     return json(200, await svc.accessRequest(p, justification ?? "", ctxFromEnv(), authConfig()));
   }),
@@ -35,14 +35,14 @@ app.http("accessRequestCreate", {
 app.http("accessRequestList", {
   methods: ["GET"], authLevel: "anonymous", route: "access-requests",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "admin", "read");
+    const p = await enforce(req, "admin", "read");
     return json(200, await svc.listPending(p, ctxFromEnv()));
   }),
 });
 app.http("accessRequestDecide", {
   methods: ["POST"], authLevel: "anonymous", route: "access-requests/decision",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "admin", "read");
+    const p = await enforce(req, "admin", "read");
     const b = await body<{ provider: string; userId: string; decision: "approve" | "deny"; role?: "authorized" | "reviewer" }>(req);
     const res = await svc.decideRequest(p, b.provider, b.userId, b.decision, b.role ?? "authorized", ctxFromEnv());
     await audit(auditRepo(), { userId: p.userId, event: `access.${b.decision}`, route: "access-requests/decision", meta: { target: `${b.provider}|${b.userId}` } });
@@ -54,7 +54,7 @@ app.http("accessRequestDecide", {
 app.http("catalog", {
   methods: ["GET"], authLevel: "anonymous", route: "catalog",
   handler: (req) => handle(async () => {
-    enforce(req, "authorized", "read");
+    await enforce(req, "authorized", "read");
     return json(200, await svc.catalog(ctxFromEnv()));
   }),
 });
@@ -63,7 +63,7 @@ app.http("catalog", {
 app.http("studyGuide", {
   methods: ["GET"], authLevel: "anonymous", route: "study/{examId}",
   handler: (req) => handle(async () => {
-    enforce(req, "authorized", "read");
+    await enforce(req, "authorized", "read");
     return json(200, await svc.studyGuide(ctxFromEnv(), req.params.examId!));
   }),
 });
@@ -72,7 +72,7 @@ app.http("studyGuide", {
 app.http("attemptsCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "attempts");
+    const p = await enforce(req, "authorized", "attempts");
     const b = await body<{ examId: string; mode: "practice" | "mock"; filters?: svc.PracticeFilters }>(req);
     return json(200, await svc.createAttempt(p.userId, b.examId, b.mode, b.filters, ctxFromEnv()));
   }),
@@ -80,7 +80,7 @@ app.http("attemptsCreate", {
 app.http("attemptsResume", {
   methods: ["GET"], authLevel: "anonymous", route: "attempts",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "read");
+    const p = await enforce(req, "authorized", "read");
     const examId = req.query.get("examId") ?? undefined;
     return json(200, await svc.resume(p.userId, examId, ctxFromEnv()));
   }),
@@ -88,7 +88,7 @@ app.http("attemptsResume", {
 app.http("attemptsSave", {
   methods: ["PATCH"], authLevel: "anonymous", route: "attempts/{attemptId}",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "save");
+    const p = await enforce(req, "authorized", "save");
     const b = await body<{ rev: number; currentIndex?: number; answers?: Record<string, number[]>; flags?: string[]; practiceElapsedMs?: number }>(req);
     return json(200, await svc.saveAttempt(p.userId, req.params.attemptId!, b, ctxFromEnv()));
   }),
@@ -98,7 +98,7 @@ app.http("attemptsSave", {
 app.http("practiceAnswer", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts/{attemptId}/answer",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "answer");
+    const p = await enforce(req, "authorized", "answer");
     const b = await body<{ qid: string; answer: number[] }>(req);
     return json(200, await svc.practiceAnswer(p.userId, req.params.attemptId!, b.qid, b.answer, ctxFromEnv()));
   }),
@@ -108,7 +108,7 @@ app.http("practiceAnswer", {
 app.http("attemptsSubmit", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts/{attemptId}/submit",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "submit");
+    const p = await enforce(req, "authorized", "submit");
     const res = await svc.submitAttempt(p.userId, req.params.attemptId!, ctxFromEnv());
     await audit(auditRepo(), { userId: p.userId, event: "submit", route: "attempts/submit", meta: { attemptId: req.params.attemptId, scaled: res.scaled } });
     return json(200, res);
@@ -119,7 +119,7 @@ app.http("attemptsSubmit", {
 app.http("attemptsReview", {
   methods: ["GET"], authLevel: "anonymous", route: "attempts/{attemptId}/review",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "read");
+    const p = await enforce(req, "authorized", "read");
     return json(200, await svc.getReview(p.userId, req.params.attemptId!, ctxFromEnv()));
   }),
 });
@@ -128,7 +128,7 @@ app.http("attemptsReview", {
 app.http("bookmarkSet", {
   methods: ["POST"], authLevel: "anonymous", route: "bookmarks",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "save");
+    const p = await enforce(req, "authorized", "save");
     const b = await body<{ examId: string; qid: string; note?: string; remove?: boolean }>(req);
     if (b.remove) return json(200, await svc.removeBookmark(p.userId, b.examId, b.qid, ctxFromEnv()));
     return json(200, await svc.setBookmark(p.userId, b.examId, b.qid, b.note, ctxFromEnv()));
@@ -137,7 +137,7 @@ app.http("bookmarkSet", {
 app.http("bookmarkList", {
   methods: ["GET"], authLevel: "anonymous", route: "bookmarks",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "read");
+    const p = await enforce(req, "authorized", "read");
     return json(200, await svc.listBookmarks(p.userId, req.query.get("examId") ?? undefined, ctxFromEnv()));
   }),
 });
@@ -146,7 +146,7 @@ app.http("bookmarkList", {
 app.http("examDrafts", {
   methods: ["GET"], authLevel: "anonymous", route: "exams/{examId}/drafts",
   handler: (req) => handle(async () => {
-    const p = enforce(req, "authorized", "read"); // service enforces reviewer/admin
+    const p = await enforce(req, "authorized", "read"); // service enforces reviewer/admin
     return json(200, await svc.listDrafts(p, req.params.examId!, ctxFromEnv()));
   }),
 });
@@ -155,7 +155,7 @@ app.http("examDrafts", {
 app.http("history", {
   methods: ["GET"], authLevel: "anonymous", route: "me/history",
   handler: (req) => handle(async (): Promise<HttpResponseInit> => {
-    const p = enforce(req, "authorized", "read");
+    const p = await enforce(req, "authorized", "read");
     const scope = (req.query.get("scope") as "exam" | "all") ?? "exam";
     const examId = req.query.get("examId") ?? undefined;
     const window = (Number(req.query.get("window")) === 30 ? 30 : 7) as 7 | 30;

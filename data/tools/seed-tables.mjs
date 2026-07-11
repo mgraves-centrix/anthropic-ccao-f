@@ -33,6 +33,7 @@ const repos = {
   Audit: AzureTableRepo.forTable("Audit"),
   Bookmarks: AzureTableRepo.forTable("Bookmarks"),
   QuestionStats: AzureTableRepo.forTable("QuestionStats"),
+  RateLimit: AzureTableRepo.forTable("RateLimit"),
 };
 for (const r of Object.values(repos)) await r.ensureTable();
 

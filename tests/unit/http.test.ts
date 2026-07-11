@@ -50,17 +50,17 @@ describe("require / requireAuthed — role gating", () => {
 });
 
 describe("enforce — role + rate limit", () => {
-  it("allows up to the limit then throws 429 with Retry-After", () => {
+  it("allows up to the limit then throws 429 with Retry-After", async () => {
     const authed = () => req({ principal: header({ userId: "rl", userRoles: ["authorized"] }) });
-    for (let i = 0; i < 10; i++) expect(enforce(authed(), "authorized", "submit").userId).toBe("rl"); // submit limit = 10
-    try { enforce(authed(), "authorized", "submit"); expect.unreachable(); }
+    for (let i = 0; i < 10; i++) expect((await enforce(authed(), "authorized", "submit")).userId).toBe("rl"); // submit limit = 10
+    try { await enforce(authed(), "authorized", "submit"); expect.unreachable(); }
     catch (e) {
       expect((e as HttpError).status).toBe(429);
       expect((e as HttpError).headers?.["Retry-After"]).toBeDefined();
     }
   });
-  it("still enforces role before rate limit", () => {
-    try { enforce(req({ principal: header({ userRoles: [] }) }), "authorized", "read"); }
+  it("still enforces role before rate limit", async () => {
+    try { await enforce(req({ principal: header({ userRoles: [] }) }), "authorized", "read"); }
     catch (e) { expect((e as HttpError).status).toBe(403); }
   });
 });

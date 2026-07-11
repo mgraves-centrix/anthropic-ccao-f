@@ -10,3 +10,4 @@ __azurite_db*.json
 test-results/
 playwright-report/
 .azurite-test/
+.azurite/

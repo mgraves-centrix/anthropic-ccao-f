@@ -100,7 +100,13 @@ GITHUB_CLIENT_ID        = <optional>
 GITHUB_CLIENT_SECRET    = <optional, Key Vault ref>
 AUTHZ_MODE              = allowlist            # or github-org, or both
 AUTO_APPROVE_DOMAINS    = majorkeytech.com,centrixlabs.com,identityfabric.ai
+NOTIFY_WEBHOOK          = <optional; Slack/Teams incoming-webhook URL for new access requests>
 ```
+The **RateLimit** table backs the durable, cross-instance rate limiter for the
+security-sensitive endpoints (submit/answer/attempt-create); it is created by the
+seed step below alongside the other tables and needs no extra configuration. Set
+`NOTIFY_WEBHOOK` to have pending self-service access requests posted to a channel;
+omit it to disable notifications (approvals still work via the Admin view).
 (Grant the SWA managed identity **Key Vault Secrets User** on `certportal-kv` so the
 `@Microsoft.KeyVault(...)` references resolve.)
 

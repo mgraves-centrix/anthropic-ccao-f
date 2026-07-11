@@ -49,4 +49,26 @@ describe.skipIf(!RUN)("AzureTableRepo against Azurite", () => {
     await repo.remove("u1", "CCAO-F|001");
     expect(await repo.get("u1", "CCAO-F|001")).toBeUndefined();
   }, 30000);
+
+  it("CAS primitives: insert 409, getWithEtag, replace 412 (durable rate limiter)", async () => {
+    const repo = AzureTableRepo.forTable("CasTest");
+    await repo.ensureTable();
+
+    await repo.insert({ partitionKey: "c", rowKey: "submit|0", count: 1 });
+    await expect(repo.insert({ partitionKey: "c", rowKey: "submit|0", count: 1 }))
+      .rejects.toMatchObject({ status: 409 });
+
+    const cur = await repo.getWithEtag("c", "submit|0");
+    expect(cur?.entity.count).toBe(1);
+    expect(cur?.etag).toBeTruthy();
+
+    // matching etag succeeds and rotates the etag
+    await repo.replace({ partitionKey: "c", rowKey: "submit|0", count: 2 }, cur!.etag);
+    expect((await repo.get("c", "submit|0"))?.count).toBe(2);
+
+    // stale etag is rejected
+    await expect(repo.replace({ partitionKey: "c", rowKey: "submit|0", count: 99 }, cur!.etag))
+      .rejects.toMatchObject({ status: 412 });
+    expect((await repo.get("c", "submit|0"))?.count).toBe(2); // unchanged
+  }, 30000);
 });
