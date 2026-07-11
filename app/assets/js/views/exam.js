@@ -82,22 +82,26 @@ async function renderHome(body, exam) {
 
 function renderSection(sec) {
   const head = `<h3>${esc(sec.label || sec.id || "")}</h3>`;
+  // domain sections get a stable anchor so Home "focus areas" can deep-link.
+  const m = /^d(\d+)$/.exec(sec.id || "");
+  const idAttr = m ? ` id="study-domain-${m[1]}"` : (sec.id ? ` id="${esc(sec.id)}"` : "");
+
   if (sec.kind === "facts" && Array.isArray(sec.items)) {
-    return `<div class="card">${head}<table class="facts">` +
-      sec.items.map((row) => `<tr><td>${esc(row[0])}</td><td>${esc(row[1])}</td></tr>`).join("") +
-      `</table></div>`;
+    return `<div class="card"${idAttr}>${head}<table class="facts">` +
+      sec.items.map((row) => {
+        const k = Array.isArray(row) ? row[0] : (row.label ?? row.k);
+        const v = Array.isArray(row) ? row[1] : (row.value ?? row.v);
+        return `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`;
+      }).join("") + `</table></div>`;
   }
-  if (sec.kind === "prose" && Array.isArray(sec.body)) {
-    return `<div class="card">${head}${sec.body.map((p) => `<p>${esc(p)}</p>`).join("")}</div>`;
-  }
-  // generic: domain notes with links/courses if present
-  const links = Array.isArray(sec.links)
-    ? `<ul>${sec.links.map((l) => `<li><a href="${esc(safeHref(l.url || l[1]))}" target="_blank" rel="noreferrer">${esc(l.label || l[0] || l.url)}</a></li>`).join("")}</ul>` : "";
+  // prose / domain / courses / generic: notes (body[]) + links[]
   const notes = Array.isArray(sec.body) ? sec.body.map((p) => `<p>${esc(p)}</p>`).join("")
     : sec.body ? `<p>${esc(sec.body)}</p>` : "";
-  const items = Array.isArray(sec.items) && !sec.kind
+  const links = Array.isArray(sec.links) && sec.links.length
+    ? `<ul class="course">${sec.links.map((l) => `<li><a href="${esc(safeHref(l.url || l[1]))}" target="_blank" rel="noreferrer">${esc(l.label || l[0] || l.url)}</a></li>`).join("")}</ul>` : "";
+  const items = Array.isArray(sec.items) && sec.kind !== "facts"
     ? `<ul>${sec.items.map((it) => `<li>${esc(typeof it === "string" ? it : (it.text || it.name || JSON.stringify(it)))}</li>`).join("")}</ul>` : "";
-  return `<div class="card">${head}${notes}${items}${links}</div>`;
+  return `<div class="card"${idAttr}>${head}${notes}${items}${links}</div>`;
 }
 
 function fillSwitcher(exams, current) {
