@@ -3,13 +3,14 @@
 // principal + input, returns DTOs. Azure Function files are thin adapters over
 // these. The answer key is read ONLY in practiceAnswer + submitAttempt.
 // ============================================================================
-import type { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo, StudyGuideRepo } from "./repos.js";
+import type { ExamsRepo, QuestionsRepo, ScenariosRepo, AttemptsRepo, UsersRepo, StudyGuideRepo, BookmarksRepo, StatsRepo } from "./repos.js";
 import type {
   ExamMeta, QuestionRow, QuestionPublic, AttemptRow, SubmitResult, AccessStatus, Role,
+  Bookmark, QuestionStat, PracticeSource,
 } from "./types.js";
 import { projectQuestion } from "./project.js";
 import { scoreAttempt, apportion } from "./scoring.js";
-import { shuffled } from "./shuffle.js";
+import { shuffled, mulberry32 } from "./shuffle.js";
 import {
   type ClientPrincipal, type AuthConfig, getVerifiedEmail, isAutoApproveDomain,
   newRequestRow, hasRole,
@@ -22,6 +23,7 @@ export class ServiceError extends Error {
 export interface Ctx {
   exams: ExamsRepo; questions: QuestionsRepo; scenarios: ScenariosRepo;
   attempts: AttemptsRepo; users: UsersRepo; study: StudyGuideRepo;
+  bookmarks: BookmarksRepo; stats: StatsRepo;
 }
 export interface Opts { now?: number; rand?: () => number; }
 
@@ -98,11 +100,34 @@ export interface AttemptPayload {
   questions: QuestionPublic[];
 }
 
+export interface PracticeFilters {
+  domains?: number[]; count?: number; seed?: number;
+  source?: PracticeSource; qids?: string[];
+}
+
+/** Resolve the qid allowlist for a configurable/retry/weak/bookmarked practice set. */
+async function resolvePracticeQids(userId: string, examId: string, filters: PracticeFilters, ctx: Ctx): Promise<Set<string>> {
+  switch (filters.source) {
+    case "qids": return new Set(filters.qids ?? []);
+    case "bookmarked": return new Set((await ctx.bookmarks.list(userId, examId)).map((b) => b.qid));
+    case "incorrect": {
+      const s = new Set<string>();
+      for (const a of await ctx.attempts.listByUser(userId, examId)) if (a.status !== "in-progress") for (const q of a.wrongQids ?? []) s.add(q);
+      return s;
+    }
+    case "weak": {
+      const stats = (await ctx.stats.list(userId, examId)).filter((st) => st.box < 2 || st.wrong > 0);
+      return new Set(stats.map((st) => st.qid));
+    }
+    default: return new Set();
+  }
+}
+
 export async function createAttempt(
   userId: string, examId: string, mode: AttemptRow["mode"],
-  filters: { domains?: number[]; count?: number } | undefined, ctx: Ctx, o?: Opts,
+  filters: PracticeFilters | undefined, ctx: Ctx, o?: Opts,
 ): Promise<AttemptPayload> {
-  const rand = rnd(o);
+  const rand = filters?.seed !== undefined ? mulberry32(filters.seed) : rnd(o);
   const t = nowMs(o);
   const exam = await ctx.exams.get(examId);
   if (!exam) throw new ServiceError(404, "exam not found");
@@ -126,6 +151,11 @@ export async function createAttempt(
     }
   } else {
     let base = pool;
+    if (mode === "practice" && filters?.source && filters.source !== "all") {
+      const allow = await resolvePracticeQids(userId, examId, filters, ctx);
+      base = base.filter((q) => allow.has(q.questionId));
+      if (base.length === 0) throw new ServiceError(409, "no questions match this practice selection");
+    }
     if (filters?.domains?.length) base = base.filter((q) => filters.domains!.includes(q.domain));
     const count = mode === "mock" ? exam.itemCount : Math.min(filters?.count ?? 10, base.length);
     if (mode === "mock") {
@@ -253,10 +283,58 @@ export async function submitAttempt(
     a.correctCount = result.correct;
     a.totalCount = result.total;
     a.byDomain = Object.fromEntries(Object.entries(result.byDomain).map(([k, v]) => [k, { c: v.c, t: v.t }]));
+    a.wrongQids = result.review.filter((r) => !r.correct).map((r) => r.qid);
     a.rev += 1;
     await ctx.attempts.put(a);
+    await updateSrs(userId, a.examId, result, ctx, o);
   }
   return result;
+}
+
+// ---- Spaced repetition (Leitner) — update on finalize ----------------------
+const BOX_DAYS = [0, 1, 3, 7, 16, 30];
+async function updateSrs(userId: string, examId: string, result: SubmitResult, ctx: Ctx, o?: Opts): Promise<void> {
+  const now = nowMs(o);
+  for (const r of result.review) {
+    const prev = await ctx.stats.get(userId, examId, r.qid);
+    const box = r.correct ? Math.min(5, (prev?.box ?? 0) + 1) : 0;
+    const stat: QuestionStat = {
+      userId, examId, qid: r.qid,
+      seen: (prev?.seen ?? 0) + 1,
+      wrong: (prev?.wrong ?? 0) + (r.correct ? 0 : 1),
+      box, lastResultAt: iso(now), dueAt: iso(now + BOX_DAYS[box]! * DAY),
+    };
+    await ctx.stats.put(stat);
+  }
+}
+
+// ---- Review a finalized attempt (post-submit; keys allowed) ----------------
+export async function getReview(userId: string, attemptId: string, ctx: Ctx, o?: Opts): Promise<SubmitResult> {
+  const a = await ctx.attempts.find(userId, attemptId);
+  if (!a) throw new ServiceError(404, "attempt not found");
+  if (a.status === "in-progress") throw new ServiceError(409, "attempt not submitted");
+  return submitAttempt(userId, attemptId, ctx, o); // idempotent — recomputes review
+}
+
+// ---- Bookmarks & personal notes --------------------------------------------
+export async function setBookmark(userId: string, examId: string, qid: string, note: string | undefined, ctx: Ctx, o?: Opts): Promise<{ ok: true }> {
+  const b: Bookmark = { userId, examId, qid, createdAt: iso(nowMs(o)) };
+  if (note !== undefined) b.note = note.slice(0, 2000);
+  await ctx.bookmarks.put(b);
+  return { ok: true };
+}
+export async function removeBookmark(userId: string, examId: string, qid: string, ctx: Ctx): Promise<{ ok: true }> {
+  await ctx.bookmarks.remove(userId, examId, qid);
+  return { ok: true };
+}
+export async function listBookmarks(userId: string, examId: string | undefined, ctx: Ctx): Promise<Bookmark[]> {
+  return ctx.bookmarks.list(userId, examId);
+}
+
+// ---- Reviewer draft preview (reviewer role) --------------------------------
+export async function listDrafts(reviewer: ClientPrincipal, examId: string, ctx: Ctx): Promise<QuestionRow[]> {
+  if (!hasRole(reviewer.userRoles, "reviewer") && !hasRole(reviewer.userRoles, "admin")) throw new ServiceError(403, "reviewer only");
+  return ctx.questions.listByStatus(examId, "draft");
 }
 
 // ---- History (aggregates only) ---------------------------------------------

@@ -5,7 +5,7 @@
 import type { TableRepo, Entity } from "./tables.js";
 import { invTicks } from "./tables.js";
 import type {
-  ExamMeta, QuestionRow, ScenarioRow, AttemptRow, AuthorizedUserRow,
+  ExamMeta, QuestionRow, ScenarioRow, AttemptRow, AuthorizedUserRow, Bookmark, QuestionStat,
 } from "./types.js";
 
 const j = (v: unknown) => JSON.stringify(v);
@@ -21,11 +21,11 @@ export class ExamsRepo {
       cutScore: m.cutScore, scaleMin: m.scaleMin, scaleMax: m.scaleMax,
       format: m.format, price: m.price, status: m.status,
       domainsJson: j(m.domains), scenariosJson: j(m.scenarios ?? []),
-      themeJson: j(m.theme),
+      themeJson: j(m.theme), version: m.version ?? 1, updatedAt: m.updatedAt ?? "",
     });
   }
   private map(e: Entity): ExamMeta {
-    return {
+    const meta: ExamMeta = {
       examId: e.rowKey, name: e.name as string, itemCount: e.itemCount as number,
       timeLimitMin: e.timeLimitMin as number, cutScore: e.cutScore as number,
       scaleMin: e.scaleMin as number, scaleMax: e.scaleMax as number,
@@ -33,7 +33,10 @@ export class ExamsRepo {
       status: e.status as ExamMeta["status"],
       domains: p(e.domainsJson, []), scenarios: p(e.scenariosJson, []),
       theme: p(e.themeJson, {} as ExamMeta["theme"]),
+      version: (e.version as number) ?? 1,
     };
+    if (e.updatedAt) meta.updatedAt = e.updatedAt as string;
+    return meta;
   }
   async get(examId: string): Promise<ExamMeta | undefined> {
     const e = await this.t.get("EXAM", examId);
@@ -79,6 +82,9 @@ export class QuestionsRepo {
       .map((e) => this.map(e))
       .filter((q) => q.status === "published");
   }
+  async listByStatus(examId: string, status: QuestionRow["status"]): Promise<QuestionRow[]> {
+    return (await this.t.queryPartition(examId)).map((e) => this.map(e)).filter((q) => q.status === status);
+  }
 }
 
 // ---- Scenarios -------------------------------------------------------------
@@ -108,7 +114,8 @@ export class AttemptsRepo {
       examId: a.examId, attemptId: a.attemptId, mode: a.mode, status: a.status,
       startedAt: a.startedAt, expiresAt: a.expiresAt ?? "", submittedAt: a.submittedAt ?? "",
       scaled: a.scaled ?? 0, correctCount: a.correctCount ?? 0, totalCount: a.totalCount ?? 0,
-      byDomainJson: j(a.byDomain ?? {}), progressJson: j(a.progress ?? null),
+      byDomainJson: j(a.byDomain ?? {}), wrongQidsJson: j(a.wrongQids ?? []),
+      progressJson: j(a.progress ?? null),
       rev: a.rev, purgeAt: a.purgeAt,
     });
   }
@@ -124,6 +131,8 @@ export class AttemptsRepo {
     if (e.scaled) a.scaled = e.scaled as number;
     if (e.correctCount !== undefined) a.correctCount = e.correctCount as number;
     if (e.totalCount !== undefined) a.totalCount = e.totalCount as number;
+    const wrong = p<string[]>(e.wrongQidsJson, []);
+    if (wrong.length) a.wrongQids = wrong;
     const prog = p<AttemptRow["progress"] | null>(e.progressJson, null);
     if (prog) a.progress = prog;
     return a;
@@ -139,6 +148,49 @@ export class AttemptsRepo {
   }
   async remove(a: AttemptRow): Promise<void> {
     await this.t.remove(a.userId, this.rk(a));
+  }
+}
+
+// ---- Bookmarks & personal notes (PK=userId) --------------------------------
+export class BookmarksRepo {
+  constructor(private t: TableRepo) {}
+  private rk(examId: string, qid: string): string { return `${examId}|${qid}`; }
+  async put(b: Bookmark): Promise<void> {
+    await this.t.upsert({ partitionKey: b.userId, rowKey: this.rk(b.examId, b.qid), examId: b.examId, qid: b.qid, note: b.note ?? "", createdAt: b.createdAt });
+  }
+  async remove(userId: string, examId: string, qid: string): Promise<void> {
+    await this.t.remove(userId, this.rk(examId, qid));
+  }
+  private map(e: Entity): Bookmark {
+    const b: Bookmark = { userId: e.partitionKey, examId: e.examId as string, qid: e.qid as string, createdAt: e.createdAt as string };
+    if (e.note) b.note = e.note as string;
+    return b;
+  }
+  async list(userId: string, examId?: string): Promise<Bookmark[]> {
+    return (await this.t.queryPartition(userId, examId ? `${examId}|` : undefined)).map((e) => this.map(e));
+  }
+  async get(userId: string, examId: string, qid: string): Promise<Bookmark | undefined> {
+    const e = await this.t.get(userId, this.rk(examId, qid));
+    return e ? this.map(e) : undefined;
+  }
+}
+
+// ---- Spaced-repetition question stats (PK=userId) --------------------------
+export class StatsRepo {
+  constructor(private t: TableRepo) {}
+  private rk(examId: string, qid: string): string { return `${examId}|${qid}`; }
+  async put(s: QuestionStat): Promise<void> {
+    await this.t.upsert({ partitionKey: s.userId, rowKey: this.rk(s.examId, s.qid), examId: s.examId, qid: s.qid, seen: s.seen, wrong: s.wrong, box: s.box, lastResultAt: s.lastResultAt, dueAt: s.dueAt });
+  }
+  private map(e: Entity): QuestionStat {
+    return { userId: e.partitionKey, examId: e.examId as string, qid: e.qid as string, seen: e.seen as number, wrong: e.wrong as number, box: e.box as number, lastResultAt: e.lastResultAt as string, dueAt: e.dueAt as string };
+  }
+  async get(userId: string, examId: string, qid: string): Promise<QuestionStat | undefined> {
+    const e = await this.t.get(userId, this.rk(examId, qid));
+    return e ? this.map(e) : undefined;
+  }
+  async list(userId: string, examId: string): Promise<QuestionStat[]> {
+    return (await this.t.queryPartition(userId, `${examId}|`)).map((e) => this.map(e));
   }
 }
 

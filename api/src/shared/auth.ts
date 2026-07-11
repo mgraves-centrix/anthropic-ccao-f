@@ -102,7 +102,10 @@ export async function resolveRoles(
 
   if (cfg.authzMode === "allowlist" || cfg.authzMode === "both") {
     const u = await users.get(p.identityProvider, p.userId);
-    if (u && u.status === "active") roles.add(u.role);
+    if (u && u.status === "active") {
+      roles.add("authorized");               // every active user can use the portal
+      if (u.role !== "authorized") roles.add(u.role); // admins/reviewers get their extra role too
+    }
   }
   if ((cfg.authzMode === "github-org" || cfg.authzMode === "both") && p.identityProvider === "github" && cfg.githubOrg) {
     if (orgCheck && (await orgCheck(p.userDetails))) roles.add("authorized");

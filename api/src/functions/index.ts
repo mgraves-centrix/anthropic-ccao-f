@@ -73,7 +73,7 @@ app.http("attemptsCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts",
   handler: (req) => handle(async () => {
     const p = enforce(req, "authorized", "attempts");
-    const b = await body<{ examId: string; mode: "practice" | "mock"; filters?: { domains?: number[]; count?: number } }>(req);
+    const b = await body<{ examId: string; mode: "practice" | "mock"; filters?: svc.PracticeFilters }>(req);
     return json(200, await svc.createAttempt(p.userId, b.examId, b.mode, b.filters, ctxFromEnv()));
   }),
 });
@@ -112,6 +112,42 @@ app.http("attemptsSubmit", {
     const res = await svc.submitAttempt(p.userId, req.params.attemptId!, ctxFromEnv());
     await audit(auditRepo(), { userId: p.userId, event: "submit", route: "attempts/submit", meta: { attemptId: req.params.attemptId, scaled: res.scaled } });
     return json(200, res);
+  }),
+});
+
+// ---- Review a finalized attempt (post-submit) ------------------------------
+app.http("attemptsReview", {
+  methods: ["GET"], authLevel: "anonymous", route: "attempts/{attemptId}/review",
+  handler: (req) => handle(async () => {
+    const p = enforce(req, "authorized", "read");
+    return json(200, await svc.getReview(p.userId, req.params.attemptId!, ctxFromEnv()));
+  }),
+});
+
+// ---- Bookmarks & personal notes --------------------------------------------
+app.http("bookmarkSet", {
+  methods: ["POST"], authLevel: "anonymous", route: "bookmarks",
+  handler: (req) => handle(async () => {
+    const p = enforce(req, "authorized", "save");
+    const b = await body<{ examId: string; qid: string; note?: string; remove?: boolean }>(req);
+    if (b.remove) return json(200, await svc.removeBookmark(p.userId, b.examId, b.qid, ctxFromEnv()));
+    return json(200, await svc.setBookmark(p.userId, b.examId, b.qid, b.note, ctxFromEnv()));
+  }),
+});
+app.http("bookmarkList", {
+  methods: ["GET"], authLevel: "anonymous", route: "bookmarks",
+  handler: (req) => handle(async () => {
+    const p = enforce(req, "authorized", "read");
+    return json(200, await svc.listBookmarks(p.userId, req.query.get("examId") ?? undefined, ctxFromEnv()));
+  }),
+});
+
+// ---- Reviewer draft preview (reviewer/admin role) --------------------------
+app.http("examDrafts", {
+  methods: ["GET"], authLevel: "anonymous", route: "exams/{examId}/drafts",
+  handler: (req) => handle(async () => {
+    const p = enforce(req, "authorized", "read"); // service enforces reviewer/admin
+    return json(200, await svc.listDrafts(p, req.params.examId!, ctxFromEnv()));
   }),
 });
 

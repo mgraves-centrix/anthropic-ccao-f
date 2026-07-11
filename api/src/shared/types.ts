@@ -43,7 +43,32 @@ export interface ExamMeta {
   domains: Domain[];
   scenarios?: { id: string; title: string }[];
   theme: ExamTheme;
+  version?: number;      // content version (bumped when the bank changes)
+  updatedAt?: string;    // ISO date of last content update
 }
+
+/** A user's bookmark + optional personal note on a question. */
+export interface Bookmark {
+  userId: string;
+  examId: ExamId;
+  qid: string;
+  note?: string;
+  createdAt: string;
+}
+
+/** Per-user, per-question spaced-repetition stats (Leitner box). */
+export interface QuestionStat {
+  userId: string;
+  examId: ExamId;
+  qid: string;
+  seen: number;
+  wrong: number;
+  box: number;          // 0 (new/hard) .. 5 (mastered)
+  lastResultAt: string;
+  dueAt: string;        // when it should next be reviewed
+}
+
+export type PracticeSource = "all" | "weak" | "incorrect" | "bookmarked" | "qids";
 
 /** Server-only question row — HOLDS THE ANSWER KEY. Never sent to the client. */
 export interface QuestionRow {
@@ -108,6 +133,7 @@ export interface AttemptRow {
   correctCount?: number;
   totalCount?: number;
   byDomain?: ByDomain;
+  wrongQids?: string[];   // persisted on submit — powers retry-incorrect
   progress?: AttemptProgress;
   rev: number;
   purgeAt: string;
