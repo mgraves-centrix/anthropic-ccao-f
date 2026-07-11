@@ -64,7 +64,8 @@ test("mock → review answers shows per-question rationale + filters", async ({ 
   await page.goto("/#/exam/CCAO-F/mock");
   await expect(page.locator(".qstem")).toBeVisible();
   await page.locator(".opt").first().click();
-  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Review & submit" }).click();
+  await page.getByRole("button", { name: /^Submit mock/ }).click();
   await page.getByRole("button", { name: "Review answers" }).click();
   await expect(page.locator(".revq").first()).toBeVisible();
   await expect(page.getByText("The correct choice is A.")).toBeVisible();
@@ -72,12 +73,15 @@ test("mock → review answers shows per-question rationale + filters", async ({ 
   await expect(page.locator(".revq")).toHaveCount(1);
 });
 
-test("mock submits and shows a verdict banner with score", async ({ page }) => {
+test("mock: navigator + review-before-submit, then verdict", async ({ page }) => {
   await page.goto("/#/exam/CCAO-F/mock");
   await expect(page.locator(".qstem")).toBeVisible();
   await expect(page.locator("#mockTimer")).toBeVisible();
-  await page.locator(".opt").first().click();
-  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.locator(".navmap .navdot")).toHaveCount(1); // navigator palette present
+  await page.getByRole("button", { name: /Flag for review/ }).click(); // flag it
+  await page.getByRole("button", { name: "Review & submit" }).click();
+  await expect(page.getByText("Flagged for review:")).toBeVisible(); // pre-submit review lists it
+  await page.getByRole("button", { name: /^Submit mock/ }).click();
   await expect(page.locator(".verdict--green")).toBeVisible();
   await expect(page.locator(".verdict__score")).toContainText("780");
 });

@@ -80,13 +80,16 @@ export async function renderRunner(host, { examId, mode, filters }) {
       `</div>` +
       `<div class="runner__nav">` +
       `<button class="btn" data-nav="prev" ${S.idx === 0 ? "disabled" : ""}>Prev</button>` +
-      `<button class="btn" data-nav="flag">${S.flags.has(q.qid) ? "Unflag" : "Flag"}</button>` +
-      (S.idx < S.qs.length - 1 ? `<button class="btn btn--primary" data-nav="next">Next</button>`
-        : `<button class="btn btn--primary" data-nav="submit">Submit</button>`) +
-      `</div></div>`;
+      `<button class="btn${S.flags.has(q.qid) ? " is-flagged" : ""}" data-nav="flag">${S.flags.has(q.qid) ? "Unflag" : "⚑ Flag for review"}</button>` +
+      `<button class="btn" data-nav="next" ${S.idx >= S.qs.length - 1 ? "disabled" : ""}>Next</button>` +
+      `<button class="btn btn--primary" data-nav="submit">Review &amp; submit</button>` +
+      `</div>` +
+      navmap() +
+      `</div>`;
 
     host.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => select(q.qid, Number(b.dataset.i), type)));
     host.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => nav(b.dataset.nav, q.qid)));
+    host.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", async () => { S.idx = Number(b.dataset.goto); await save(); draw(); }));
     const bmk = host.querySelector("[data-bmk]");
     if (bmk) bmk.addEventListener("click", async () => {
       try {
@@ -97,11 +100,51 @@ export async function renderRunner(host, { examId, mode, filters }) {
     });
   }
 
+  // Question navigator palette: jump to any question; shows answered/flagged/current.
+  function navmap() {
+    return `<div class="navmap" role="group" aria-label="Question navigator">` +
+      S.qs.map((qq, i) => {
+        const answered = (S.answers[qq.qid]?.length ?? 0) > 0;
+        const flagged = S.flags.has(qq.qid);
+        const cls = `navdot${answered ? " answered" : ""}${flagged ? " flagged" : ""}${i === S.idx ? " current" : ""}`;
+        const label = `Question ${i + 1}${answered ? ", answered" : ", unanswered"}${flagged ? ", flagged for review" : ""}${i === S.idx ? ", current" : ""}`;
+        return `<button class="${cls}" data-goto="${i}" aria-label="${label}"${i === S.idx ? ' aria-current="true"' : ""}>${i + 1}${flagged ? "<span aria-hidden=\"true\">⚑</span>" : ""}</button>`;
+      }).join("") + `</div>`;
+  }
+
   async function nav(action, qid) {
     if (action === "flag") { S.flags.has(qid) ? S.flags.delete(qid) : S.flags.add(qid); await save(); return draw(); }
     if (action === "prev") { S.idx = Math.max(0, S.idx - 1); await save(); return draw(); }
     if (action === "next") { S.idx = Math.min(S.qs.length - 1, S.idx + 1); await save(); return draw(); }
-    if (action === "submit") return finish(false);
+    if (action === "submit") return reviewBeforeSubmit();
+  }
+
+  // Pre-submit review: surface unanswered + flagged questions with jump links,
+  // so nothing is submitted by accident. Confirm required to submit.
+  async function reviewBeforeSubmit() {
+    await save();
+    const unanswered = [];
+    const flagged = [];
+    S.qs.forEach((q, i) => {
+      if (!(S.answers[q.qid]?.length)) unanswered.push(i);
+      if (S.flags.has(q.qid)) flagged.push(i);
+    });
+    const dots = (list, extra) => `<div class="navmap">` + list.map((i) =>
+      `<button class="navdot${extra}${(S.answers[S.qs[i].qid]?.length) ? " answered" : ""}" data-goto="${i}">${i + 1}</button>`).join("") + `</div>`;
+    host.innerHTML =
+      `<div class="card"><h3>Review &amp; submit</h3>` +
+      `<p class="mono">${S.qs.length - unanswered.length} of ${S.qs.length} answered${flagged.length ? ` · ${flagged.length} flagged` : ""}.</p>` +
+      (unanswered.length
+        ? `<p><strong>${unanswered.length} unanswered</strong> — you can still go back:</p>${dots(unanswered, "")}`
+        : `<p class="muted">All questions answered.</p>`) +
+      (flagged.length ? `<p><strong>Flagged for review:</strong></p>${dots(flagged, " flagged")}` : "") +
+      `<div class="runner__nav">` +
+      `<button class="btn" data-back>Keep working</button>` +
+      `<button class="btn btn--primary" data-confirm>Submit ${esc(mode)}${unanswered.length ? ` (${unanswered.length} blank)` : ""}</button>` +
+      `</div></div>`;
+    host.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", async () => { S.idx = Number(b.dataset.goto); await save(); draw(); }));
+    host.querySelector("[data-back]").addEventListener("click", () => draw());
+    host.querySelector("[data-confirm]").addEventListener("click", () => finish(false));
   }
 
   async function finish(auto) {
