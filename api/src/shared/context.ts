@@ -16,6 +16,10 @@ export function ctxFromEnv(): Ctx {
   };
 }
 
+export function auditRepo() {
+  return AzureTableRepo.forTable("Audit");
+}
+
 export function authConfig(): AuthConfig {
   const mode = (process.env.AUTHZ_MODE as AuthConfig["authzMode"]) || "allowlist";
   const cfg: AuthConfig = { authzMode: mode };

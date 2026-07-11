@@ -1,22 +1,24 @@
 // HTTP helpers for the Function adapters. Principal + roles are derived from the
-// SWA-injected header — never from the request body (spec §III.7).
+// SWA-injected header — never from the request body (spec §III.7). Adds rate-limit
+// enforcement (§15) via the shared limiter.
 import type { HttpRequest, HttpResponseInit } from "@azure/functions";
 import { parsePrincipal, hasRole, type ClientPrincipal } from "./auth.js";
 import type { Role } from "./types.js";
+import { limiter, LIMITS } from "./ratelimit.js";
 
 export function principalOf(req: HttpRequest): ClientPrincipal | null {
   return parsePrincipal(req.headers.get("x-ms-client-principal"));
 }
 
-export function json(status: number, body: unknown): HttpResponseInit {
-  return { status, jsonBody: body };
+export function json(status: number, body: unknown, headers?: Record<string, string>): HttpResponseInit {
+  return headers ? { status, jsonBody: body, headers } : { status, jsonBody: body };
 }
 
 export class HttpError extends Error {
-  constructor(public status: number, msg: string) { super(msg); }
+  constructor(public status: number, msg: string, public headers?: Record<string, string>) { super(msg); }
 }
 
-/** Require an authenticated principal holding `role`. Returns it or throws. */
+/** Require an authenticated principal holding `role`. Returns it or throws 401/403. */
 export function require(req: HttpRequest, role: Role): ClientPrincipal {
   const p = principalOf(req);
   if (!p) throw new HttpError(401, "unauthenticated");
@@ -31,13 +33,28 @@ export function requireAuthed(req: HttpRequest): ClientPrincipal {
   return p;
 }
 
+/**
+ * Enforce auth (role) AND a per-user/route rate limit (§15). Returns the
+ * principal or throws 401/403/429 (429 carries a Retry-After header).
+ * `routeKey` selects a bucket in LIMITS; omit to skip rate limiting.
+ */
+export function enforce(req: HttpRequest, role: Role, routeKey?: keyof typeof LIMITS): ClientPrincipal {
+  const p = require(req, role);
+  if (routeKey) {
+    const r = limiter.check(p.userId, routeKey, LIMITS[routeKey]);
+    if (!r.ok) throw new HttpError(429, "rate limit exceeded", { "Retry-After": String(Math.ceil(r.retryAfterMs / 1000)) });
+  }
+  return p;
+}
+
 export async function handle(fn: () => Promise<HttpResponseInit>): Promise<HttpResponseInit> {
   try {
     return await fn();
   } catch (e: unknown) {
     const status = (e as { status?: number }).status ?? 500;
     const message = (e as { message?: string }).message ?? "error";
-    return json(status, { error: message });
+    const headers = (e as { headers?: Record<string, string> }).headers;
+    return json(status, { error: message }, headers);
   }
 }
 

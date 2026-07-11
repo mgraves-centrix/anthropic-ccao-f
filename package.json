@@ -8,6 +8,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:api": "tsc -p api/tsconfig.json",
+    "test:azure": "RUN_AZURE=1 vitest run tests/integration/azure-tables.test.ts",
     "gate": "npm run typecheck && npm run test"
   },
   "devDependencies": {

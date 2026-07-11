@@ -2,9 +2,10 @@
 // service layer. authLevel is 'anonymous' because SWA EasyAuth + staticwebapp
 // route roles gate access; each handler re-derives principal/roles server-side.
 import { app, type HttpResponseInit } from "@azure/functions";
-import { json, handle, require as requireRole, requireAuthed, body } from "../shared/http.js";
-import { ctxFromEnv, authConfig } from "../shared/context.js";
+import { json, handle, requireAuthed, enforce, body } from "../shared/http.js";
+import { ctxFromEnv, authConfig, auditRepo } from "../shared/context.js";
 import { resolveRoles, type ClientPrincipal } from "../shared/auth.js";
+import { audit } from "../shared/audit.js";
 import * as svc from "../shared/service.js";
 
 // ---- rolesSource: POST /api/GetRoles ---------------------------------------
@@ -30,16 +31,18 @@ app.http("accessRequestCreate", {
 app.http("accessRequestList", {
   methods: ["GET"], authLevel: "anonymous", route: "access-requests",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "admin");
+    const p = enforce(req, "admin", "read");
     return json(200, await svc.listPending(p, ctxFromEnv()));
   }),
 });
 app.http("accessRequestDecide", {
   methods: ["POST"], authLevel: "anonymous", route: "access-requests/decision",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "admin");
+    const p = enforce(req, "admin", "read");
     const b = await body<{ provider: string; userId: string; decision: "approve" | "deny"; role?: "authorized" | "reviewer" }>(req);
-    return json(200, await svc.decideRequest(p, b.provider, b.userId, b.decision, b.role ?? "authorized", ctxFromEnv()));
+    const res = await svc.decideRequest(p, b.provider, b.userId, b.decision, b.role ?? "authorized", ctxFromEnv());
+    await audit(auditRepo(), { userId: p.userId, event: `access.${b.decision}`, route: "access-requests/decision", meta: { target: `${b.provider}|${b.userId}` } });
+    return json(200, res);
   }),
 });
 
@@ -47,7 +50,7 @@ app.http("accessRequestDecide", {
 app.http("catalog", {
   methods: ["GET"], authLevel: "anonymous", route: "catalog",
   handler: (req) => handle(async () => {
-    requireRole(req, "authorized");
+    enforce(req, "authorized", "read");
     return json(200, await svc.catalog(ctxFromEnv()));
   }),
 });
@@ -56,7 +59,7 @@ app.http("catalog", {
 app.http("studyGuide", {
   methods: ["GET"], authLevel: "anonymous", route: "study/{examId}",
   handler: (req) => handle(async () => {
-    requireRole(req, "authorized");
+    enforce(req, "authorized", "read");
     return json(200, await svc.studyGuide(ctxFromEnv(), req.params.examId!));
   }),
 });
@@ -65,7 +68,7 @@ app.http("studyGuide", {
 app.http("attemptsCreate", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "authorized");
+    const p = enforce(req, "authorized", "attempts");
     const b = await body<{ examId: string; mode: "practice" | "mock"; filters?: { domains?: number[]; count?: number } }>(req);
     return json(200, await svc.createAttempt(p.userId, b.examId, b.mode, b.filters, ctxFromEnv()));
   }),
@@ -73,7 +76,7 @@ app.http("attemptsCreate", {
 app.http("attemptsResume", {
   methods: ["GET"], authLevel: "anonymous", route: "attempts",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "authorized");
+    const p = enforce(req, "authorized", "read");
     const examId = req.query.get("examId") ?? undefined;
     return json(200, await svc.resume(p.userId, examId, ctxFromEnv()));
   }),
@@ -81,7 +84,7 @@ app.http("attemptsResume", {
 app.http("attemptsSave", {
   methods: ["PATCH"], authLevel: "anonymous", route: "attempts/{attemptId}",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "authorized");
+    const p = enforce(req, "authorized", "save");
     const b = await body<{ rev: number; currentIndex?: number; answers?: Record<string, number[]>; flags?: string[]; practiceElapsedMs?: number }>(req);
     return json(200, await svc.saveAttempt(p.userId, req.params.attemptId!, b, ctxFromEnv()));
   }),
@@ -91,7 +94,7 @@ app.http("attemptsSave", {
 app.http("practiceAnswer", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts/{attemptId}/answer",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "authorized");
+    const p = enforce(req, "authorized", "answer");
     const b = await body<{ qid: string; answer: number[] }>(req);
     return json(200, await svc.practiceAnswer(p.userId, req.params.attemptId!, b.qid, b.answer, ctxFromEnv()));
   }),
@@ -101,8 +104,10 @@ app.http("practiceAnswer", {
 app.http("attemptsSubmit", {
   methods: ["POST"], authLevel: "anonymous", route: "attempts/{attemptId}/submit",
   handler: (req) => handle(async () => {
-    const p = requireRole(req, "authorized");
-    return json(200, await svc.submitAttempt(p.userId, req.params.attemptId!, ctxFromEnv()));
+    const p = enforce(req, "authorized", "submit");
+    const res = await svc.submitAttempt(p.userId, req.params.attemptId!, ctxFromEnv());
+    await audit(auditRepo(), { userId: p.userId, event: "submit", route: "attempts/submit", meta: { attemptId: req.params.attemptId, scaled: res.scaled } });
+    return json(200, res);
   }),
 });
 
@@ -110,7 +115,7 @@ app.http("attemptsSubmit", {
 app.http("history", {
   methods: ["GET"], authLevel: "anonymous", route: "me/history",
   handler: (req) => handle(async (): Promise<HttpResponseInit> => {
-    const p = requireRole(req, "authorized");
+    const p = enforce(req, "authorized", "read");
     const scope = (req.query.get("scope") as "exam" | "all") ?? "exam";
     const examId = req.query.get("examId") ?? undefined;
     const window = (Number(req.query.get("window")) === 30 ? 30 : 7) as 7 | 30;
