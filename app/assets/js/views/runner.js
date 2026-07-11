@@ -5,7 +5,7 @@
 import { api } from "../api.js";
 import { renderDomainBars } from "../charts/domainBars.js";
 import { go } from "../router.js";
-import { esc, safeHref } from "../util.js";
+import { esc, safeHref, announce, toast } from "../util.js";
 import { renderReview } from "./review.js";
 
 export async function renderRunner(host, { examId, mode, filters }) {
@@ -49,6 +49,28 @@ async function start(host, examId, mode, filters, resumed) {
   api.bookmarkList(examId).then((bs) => { S.bookmarked = new Set(bs.map((b) => b.qid)); draw(); }).catch(() => {});
   let timer = null;
   if (mode === "mock" && att.expiresAt) startTimer(att.expiresAt, () => finish(true));
+
+  // Keyboard shortcuts (WCAG 2.1.1 Keyboard). Ignore while typing in a field.
+  function onKey(e) {
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (!host.querySelector(".qcard")) return; // only while a question is shown
+    const q = S.qs[S.idx];
+    const k = e.key.toLowerCase();
+    if (e.key >= "1" && e.key <= "9") {
+      const i = Number(e.key) - 1;
+      if (i < q.options.length && !S.feedback[q.qid]) { e.preventDefault(); select(q.qid, i, q.type); }
+    } else if (k === "n" || e.key === "ArrowRight") { if (S.idx < S.qs.length - 1) { e.preventDefault(); nav("next"); } }
+    else if (k === "p" || e.key === "ArrowLeft") { if (S.idx > 0) { e.preventDefault(); nav("prev"); } }
+    else if (k === "f") { e.preventDefault(); nav("flag", q.qid); }
+    else if (k === "b") { e.preventDefault(); host.querySelector("[data-bmk]")?.click(); }
+    else if (k === "u") { e.preventDefault(); nav("unanswered"); }
+  }
+  window.addEventListener("keydown", onKey);
+
+  function firstUnanswered() {
+    for (let d = 1; d <= S.qs.length; d++) { const i = (S.idx + d) % S.qs.length; if (!(S.answers[S.qs[i].qid]?.length)) return i; }
+    return -1;
+  }
 
   function startTimer(expiresAt, onExpire) {
     const tick = () => {
@@ -151,8 +173,11 @@ async function start(host, examId, mode, filters, resumed) {
       `<button class="btn" data-nav="prev" ${S.idx === 0 ? "disabled" : ""}>Prev</button>` +
       `<button class="btn${S.flags.has(q.qid) ? " is-flagged" : ""}" data-nav="flag">${S.flags.has(q.qid) ? "Unflag" : "⚑ Flag for review"}</button>` +
       `<button class="btn" data-nav="next" ${S.idx >= S.qs.length - 1 ? "disabled" : ""}>Next</button>` +
+      (firstUnanswered() >= 0 ? `<button class="btn" data-nav="unanswered">Next unanswered</button>` : "") +
       `<button class="btn btn--primary" data-nav="submit">Review &amp; submit</button>` +
-      `</div>` + navmap() + `</div>`;
+      `</div>` + navmap() +
+      `<p class="mono muted kbd-hint">Shortcuts: <kbd>1</kbd>–<kbd>${q.options.length}</kbd> answer · <kbd>N</kbd>/<kbd>P</kbd> move · <kbd>U</kbd> next unanswered · <kbd>F</kbd> flag · <kbd>B</kbd> bookmark</p>` +
+      `</div>`;
 
     host.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => select(q.qid, Number(b.dataset.i), type)));
     host.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => nav(b.dataset.nav, q.qid)));
@@ -165,12 +190,15 @@ async function start(host, examId, mode, filters, resumed) {
         draw();
       } catch { /* ignore */ }
     });
+    const answered = (S.answers[q.qid]?.length ?? 0) > 0;
+    announce(`Question ${S.idx + 1} of ${S.qs.length}${answered ? ", answered" : ""}${S.flags.has(q.qid) ? ", flagged" : ""}`);
   }
 
   async function nav(action, qid) {
     if (action === "flag") { S.flags.has(qid) ? S.flags.delete(qid) : S.flags.add(qid); await save(); return draw(); }
     if (action === "prev") { S.idx = Math.max(0, S.idx - 1); await save(); return draw(); }
     if (action === "next") { S.idx = Math.min(S.qs.length - 1, S.idx + 1); await save(); return draw(); }
+    if (action === "unanswered") { const i = firstUnanswered(); if (i >= 0) { S.idx = i; await save(); draw(); } else { toast("All questions answered", "info"); } return; }
     if (action === "submit") return reviewBeforeSubmit();
   }
 
@@ -198,6 +226,7 @@ async function start(host, examId, mode, filters, resumed) {
 
   async function finish(auto) {
     if (timer) clearInterval(timer);
+    window.removeEventListener("keydown", onKey);
     await save();
     let res;
     try { res = await api.submit(S.attemptId); }
@@ -228,7 +257,10 @@ export function renderResults(host, examId, res, auto, attemptId) {
     `<div class="runner__nav">` +
     (attemptId ? `<button class="btn btn--primary" id="reviewBtn">Review answers</button>` : "") +
     (res.weakDomains?.length || res.correct < res.total ? `<button class="btn" id="retryBtn">Retry incorrect</button>` : "") +
+    `<button class="btn" id="pdfBtn">Save as PDF</button>` +
     `<button class="btn" id="backHome">Back to exam</button></div>`;
+  const pdf = document.getElementById("pdfBtn");
+  if (pdf) pdf.addEventListener("click", () => window.print());
   const back = document.getElementById("backHome");
   if (back) back.addEventListener("click", () => go(`#/exam/${encodeURIComponent(examId)}/home`));
   const rev = document.getElementById("reviewBtn");

@@ -1,8 +1,7 @@
 // Admin → Requests: approve/deny self-service access requests (spec §III.6a).
 // Route is admin-gated by staticwebapp.config.json; the API re-checks the role.
 import { api } from "../api.js";
-
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+import { esc, toast } from "../util.js";
 
 export async function renderAdmin(el) {
   document.body.removeAttribute("data-exam");
@@ -23,7 +22,7 @@ async function load(host) {
   ).join("");
   host.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => {
     b.disabled = true;
-    try { await api.decide(b.dataset.p, b.dataset.u, b.dataset.a, "authorized"); await load(host); }
-    catch (e) { alert(e.message); b.disabled = false; }
+    try { await api.decide(b.dataset.p, b.dataset.u, b.dataset.a, "authorized"); toast(`Request ${b.dataset.a === "approve" ? "approved" : "denied"}`, "info"); await load(host); }
+    catch (e) { toast(e.message, "error"); b.disabled = false; }
   }));
 }

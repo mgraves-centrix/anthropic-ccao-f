@@ -122,3 +122,23 @@ a { color: var(--accent-ink); }
 .navdot.current { outline: 2px solid var(--focus); outline-offset: 1px; font-weight: 700; }
 .btn.is-flagged { border-color: var(--amber); color: var(--amber); }
 .conflict-bar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; background: var(--amber-tint); border: 1px solid var(--amber); color: var(--ink); padding: .5rem .8rem; border-radius: var(--r-sm); margin-bottom: .8rem; }
+/* ---- Toasts, keyboard hints, sticky timer ---- */
+.toasts { position: fixed; right: 1rem; bottom: 1rem; display: flex; flex-direction: column; gap: .5rem; z-index: 50; }
+.toast { background: var(--ink); color: var(--surface); padding: .55rem .9rem; border-radius: var(--r-sm); box-shadow: var(--shadow, 0 4px 16px rgba(0,0,0,.2)); font-size: .9rem; opacity: 1; transition: opacity .25s; max-width: 320px; }
+.toast--error { background: var(--wrong); color: #fff; }
+.toast--out { opacity: 0; }
+.kbd-hint { margin-top: .5rem; }
+.kbd-hint kbd { font-family: var(--font-mono); background: var(--surface-2); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 3px; padding: 0 .3rem; font-size: .78rem; }
+.runner__top { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: .3rem 0; }
+@media (max-width: 420px) {
+  .runner__nav { flex-wrap: wrap; }
+  .tabs { overflow-x: auto; flex-wrap: nowrap; }
+}
+/* ---- Print / PDF ---- */
+@media print {
+  .topbar, .tabs, .runner__nav, .navmap, .kbd-hint, .prog-controls, #toasts, .foot, .skip, .switcher, #themeToggle, #installBtn { display: none !important; }
+  body { background: #fff; color: #000; }
+  .main { max-width: 100%; }
+  .card, .verdict { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+}

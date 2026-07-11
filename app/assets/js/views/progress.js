@@ -26,7 +26,8 @@ export async function renderProgress(host, examId) {
     controls +
     `<div class="card"><h3>Score history</h3>${line}</div>` +
     `<div class="card"><h3>${state.scope === "exam" ? "Average % correct by domain" : "Average score by exam"}</h3>${bars}</div>` +
-    `<p><button class="btn" id="exportCsv">Export my results (CSV)</button></p>`;
+    `<p><button class="btn" id="exportCsv">Export results (CSV)</button> ` +
+    `<button class="btn" id="exportPdf">Save as PDF</button></p>`;
 
   host.querySelectorAll("[data-window]").forEach((b) =>
     b.addEventListener("click", () => { state.window = Number(b.dataset.window); renderProgress(host, examId); }));
@@ -34,6 +35,8 @@ export async function renderProgress(host, examId) {
     b.addEventListener("click", () => { state.scope = b.dataset.scope; renderProgress(host, examId); }));
   const exp = host.querySelector("#exportCsv");
   if (exp) exp.addEventListener("click", () => exportCsv(data?.points ?? [], examId));
+  const pdf = host.querySelector("#exportPdf");
+  if (pdf) pdf.addEventListener("click", () => window.print());
 }
 
 /** Self-service export of the user's OWN results (spec nice-to-have). */
