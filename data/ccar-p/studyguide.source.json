@@ -1,0 +1,332 @@
+{
+  "title": "Claude Certified Architect – Professional (CCAR-P) Study Guide",
+  "subtitle": "A reference-grounded preparation guide for the CCAR-P exam, covering all seven weighted domains with citations to official Anthropic documentation.",
+  "sections": [
+    {
+      "id": "glance",
+      "label": "Exam at a glance",
+      "kind": "facts",
+      "items": [
+        {
+          "label": "Exam code",
+          "value": "CCAR-P (Claude Certified Architect – Professional)"
+        },
+        {
+          "label": "Items",
+          "value": "63 questions (multiple choice / multiple response / scenario-based)"
+        },
+        {
+          "label": "Time limit",
+          "value": "120 minutes"
+        },
+        {
+          "label": "Passing score",
+          "value": "720 on a scaled range of 100–1,000"
+        },
+        {
+          "label": "Fee",
+          "value": "$175 USD (per attempt)"
+        },
+        {
+          "label": "Validity",
+          "value": "12 months from date of passing"
+        },
+        {
+          "label": "Result reporting",
+          "value": "Pass/fail with a scaled score, plus percent-correct broken down by domain to guide remediation"
+        },
+        {
+          "label": "Delivery",
+          "value": "Online proctored"
+        },
+        {
+          "label": "Prerequisite knowledge",
+          "value": "Practical experience designing and integrating Claude-based solutions; familiarity with the Claude Developer Platform, the Messages API, tool use, and MCP"
+        }
+      ]
+    },
+    {
+      "id": "approach",
+      "label": "How to prepare",
+      "kind": "prose",
+      "body": [
+        "Study by domain weight, not by page order. The exam is 63 items; the three heaviest domains — Integration (19%), Solution Design & Architecture (17%), and Evaluation, Testing & Optimization (16%) — together account for just over half the exam. Budget the majority of your revision there, then round out with Governance & Safety (14%), Stakeholder Communication & Lifecycle (14%), Prompting & Context Engineering (13%), and Developer Productivity (7%). A single well-answered scenario question in a heavy domain moves your score more than several facts memorized in a light one.",
+        "Ground every fact in the current documentation rather than memory. The platform moves quickly: model IDs, default parameters, and beta headers change. As of mid-2026 the default Opus tier is Claude Opus 4.8, with Claude Sonnet 5 and Claude Haiku 4.5 rounding out the mainline family and Claude Fable 5 as the most capable widely released model; sampling parameters (temperature, top_p, top_k) return a 400 error on Opus 4.7 and later, Sonnet 5, and Fable 5 (you steer behavior with prompting and the effort parameter instead); and the MCP connector uses the beta header mcp-client-2025-11-20. Read the primary docs pages linked in each domain below so your mental model matches what the exam tests.",
+        "Learn to reason about trade-offs, because most items are scenario-based. Expect prompts of the form 'given these constraints (latency, cost, data sensitivity, accuracy), which architecture is best?' Practice choosing among prompting, retrieval-augmented generation (RAG), tool use / agents, and model tiering — and be able to justify why. Know the decision boundaries: when a workflow beats an autonomous agent, when Haiku suffices over Opus, when batch beats real-time, and when prompt caching or extended (adaptive) thinking is the right lever.",
+        "Use practice questions to find gaps, then mock exams to rehearse conditions. Work untimed practice sets first, and after each miss return to the exact doc page that explains the concept — that closes the loop far better than re-reading answers. Only once you are consistently correct should you sit full 120-minute, 63-item mock exams to build pacing (roughly under two minutes per item) and stamina under proctored conditions.",
+        "Build something end to end before you sit the exam. Standing up a small Claude application — Messages API calls, a couple of tools, an MCP server connection, a Console evaluation suite, and basic guardrails — cements the integration and evaluation domains in a way reading cannot. The free Anthropic Academy courses listed at the end are designed exactly for this hands-on reinforcement."
+      ]
+    },
+    {
+      "id": "d1",
+      "label": "Domain 1: Solution Design & Architecture (17%)",
+      "kind": "domain",
+      "body": [
+        "Choose the right model tier for the job. Within the mainline family, Opus (currently Opus 4.8) is optimized for the hardest reasoning and agentic tasks, Sonnet (currently Sonnet 5) balances capability with cost and speed for most production workloads, and Haiku (Haiku 4.5) is the low-latency, low-cost option for high-volume or simple tasks; Claude Fable 5 sits above Opus as the most capable widely released model for the most demanding long-horizon work. Architects should tier models within a system — e.g., Haiku for routing/classification, Sonnet or Opus for the reasoning-heavy step.",
+        "Distinguish workflows from agents. Anthropic's guidance is to prefer the simplest pattern that works: deterministic workflows (prompt chaining, routing, parallelization) give predictability and lower cost, while autonomous agents (a model directing its own tool calls in a loop) suit open-ended tasks where the path can't be predefined. Add agentic autonomy only when the added flexibility clearly pays for the added cost and unpredictability.",
+        "Decide between prompting, RAG, and long-context. For knowledge the model lacks, retrieval-augmented generation grounds answers in your data and supports citations; the large 1M-token context window can also fit substantial reference material directly. The first-party Claude API centers on prompting, retrieval, and tools rather than fine-tuning model weights, so architecture typically combines strong prompts, retrieval, and tools.",
+        "Design around the context window as a budget. Every request shares one window across system prompt, conversation history, retrieved documents, tool definitions, and the response. Plan for token cost and latency growth as context grows, and use prompt caching for large stable prefixes and batch processing for latency-tolerant bulk jobs.",
+        "Factor cost, latency, and reliability into the design from the start. Real-time chat, asynchronous batch, and streaming each fit different UX and cost profiles; tool use and MCP add capability but also new failure modes (timeouts, bad tool outputs) that the architecture must handle gracefully."
+      ],
+      "links": [
+        {
+          "label": "Choosing the right model",
+          "url": "https://docs.claude.com/en/docs/about-claude/models/choosing-a-model"
+        },
+        {
+          "label": "Models overview",
+          "url": "https://docs.claude.com/en/docs/about-claude/models/overview"
+        },
+        {
+          "label": "Context windows",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/context-windows"
+        },
+        {
+          "label": "Building effective agents",
+          "url": "https://www.anthropic.com/engineering/building-effective-agents"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "label": "Domain 2: Claude Models, Prompting & Context Engineering (13%)",
+      "kind": "domain",
+      "body": [
+        "Apply the core prompting techniques in order of leverage: be clear and direct, give examples (multishot), let Claude think (chain-of-thought), use XML tags to delimit inputs and structure output, assign a role via the system prompt, prefill the assistant turn to steer format on models that support it, and chain prompts for complex multi-step tasks. These are the techniques the Prompting best practices reference treats as the living standard. Note that assistant-turn prefilling is no longer supported on current models (Opus 4.8, Opus 4.7, Sonnet 5, Sonnet 4.6, Fable 5) — use structured outputs (output_config.format) or system-prompt instructions instead.",
+        "Use the system prompt for role and durable instructions, and separate stable context (instructions, examples, reference docs) from the variable user turn. Structuring inputs with XML tags such as <document> and <instructions> improves reliability and makes prompts easier to evaluate and cache.",
+        "Know that sampling parameters have changed on recent models. On Claude Opus 4.7 and later (including Opus 4.8), Claude Sonnet 5, and Claude Fable 5, temperature, top_p, and top_k return a 400 error when set to non-default values — you now steer behavior through prompting rather than sampling knobs. Older models still accept them.",
+        "Use thinking for hard reasoning, via the current mechanism. On current models (Opus 4.8, Opus 4.7, Sonnet 5, Fable 5) you enable adaptive thinking (thinking: {type: 'adaptive'}) and control depth with the effort parameter (low, medium, high, xhigh, max); the older fixed thinking budget (budget_tokens) is legacy and returns a 400 on those models, applying only to earlier models such as Haiku 4.5. Reserve deeper thinking for tasks that genuinely need multi-step reasoning because it consumes tokens.",
+        "Practice context engineering, not just prompt wording. Manage what enters the window: retrieve only relevant chunks, cache large stable prefixes with prompt caching, summarize or trim long histories, and place the most important instructions where the model attends to them. Use the Console prompt generator and prompt improver to iterate quickly."
+      ],
+      "links": [
+        {
+          "label": "Prompt engineering overview",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview"
+        },
+        {
+          "label": "Prompting best practices",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+        },
+        {
+          "label": "Adaptive thinking",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/adaptive-thinking"
+        },
+        {
+          "label": "Prompt caching",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "label": "Domain 3: Integration (19%)",
+      "kind": "domain",
+      "body": [
+        "Master the Messages API as the foundation. Requests carry a model, max_tokens, a messages array of alternating user/assistant turns, and an optional system prompt; responses return content blocks and a stop_reason. Know multi-turn construction, streaming via server-sent events, and token counting to estimate cost before sending.",
+        "Understand tool use (function calling) end to end. You supply tool definitions with JSON Schema input; Claude returns a tool_use block, your code executes the tool and returns a tool_result block, and the loop continues until stop_reason is end_turn. Clear tool names and descriptions drive correct selection — this is the exam's most-tested integration mechanic.",
+        "Know MCP and the MCP connector. The Model Context Protocol is an open standard for connecting models to external tools and data; the API's MCP connector (beta header mcp-client-2025-11-20) lets Claude call remote MCP servers directly from the Messages API without your own MCP client. You attach servers in mcp_servers and control exposure with an mcp_toolset supporting allowlists, denylists, and per-tool config. Servers must be publicly reachable over HTTPS (Streamable HTTP or SSE); local stdio servers aren't directly supported, and the connector isn't ZDR-eligible.",
+        "Use the right modality features: vision for images, PDF support and the Files API for documents, and Citations to return grounded, verifiable references to source passages. These reduce hallucination and improve auditability in RAG systems.",
+        "Handle production concerns explicitly. Respect rate limits and implement retry with backoff on 429/5xx, pin the anthropic-version header, and prefer official SDKs (Python, TypeScript, and others). For latency-tolerant, high-volume workloads, the Message Batches API processes large request sets asynchronously at lower cost."
+      ],
+      "links": [
+        {
+          "label": "Messages API reference",
+          "url": "https://docs.claude.com/en/api/messages"
+        },
+        {
+          "label": "Tool use overview",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"
+        },
+        {
+          "label": "MCP connector",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/mcp-connector"
+        },
+        {
+          "label": "Model Context Protocol (open standard spec)",
+          "url": "https://modelcontextprotocol.io/introduction"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "label": "Domain 4: Evaluation, Testing & Optimization (16%)",
+      "kind": "domain",
+      "body": [
+        "Define success criteria before you build. Good criteria are specific, measurable, and tied to the use case (accuracy, format adherence, latency, cost). You cannot optimize what you cannot measure — the docs put defining criteria and building evaluations ahead of prompt engineering.",
+        "Build empirical evaluations, not vibes. Create test sets with representative and edge-case inputs, run them against your prompt, and grade outputs. Grading methods include exact/code-based checks, human review, and LLM-as-judge (using a model with a rubric to score outputs) for open-ended tasks.",
+        "Use the Console Evaluation tool to iterate. It lets you build test suites with {{variable}} placeholders, generate or import test cases, compare prompt versions side by side, grade responses on a 5-point scale, and re-run the full suite when the prompt changes — making prompt improvement measurable and repeatable.",
+        "Reduce hallucinations with concrete techniques: allow Claude to say 'I don't know,' ground responses in provided documents, request direct quotes and citations for factual claims, and verify with chain-of-thought or a second-pass check. RAG plus Citations is the standard grounding pattern.",
+        "Optimize the three levers — cost, latency, quality — deliberately. Right-size the model (drop to Sonnet or Haiku where quality holds), cache stable prefixes with prompt caching to cut input cost and latency, batch non-interactive work, tune the effort parameter, and constrain output length. Always re-run evaluations after an optimization to confirm quality didn't regress."
+      ],
+      "links": [
+        {
+          "label": "Define success & build evaluations",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests"
+        },
+        {
+          "label": "Using the Evaluation tool",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/eval-tool"
+        },
+        {
+          "label": "Reduce hallucinations",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+        },
+        {
+          "label": "Reduce latency",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-latency"
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "label": "Domain 5: Governance, Safety & Risk Management (14%)",
+      "kind": "domain",
+      "body": [
+        "Know the policy layer. Anthropic's Usage Policy (also referred to as the Acceptable Use Policy) defines prohibited uses; architects must ensure applications and their end-user behavior stay within it, and apply extra care in high-risk domains such as health, legal, and finance.",
+        "Design layered guardrails. Combine input screening, clear system-prompt boundaries, output validation, and, where needed, a moderation pass. No single control is sufficient; defense in depth is the expectation.",
+        "Mitigate jailbreaks and prompt injection. Use strong system prompts, keep untrusted content clearly delimited (e.g., inside tool_result blocks or XML tags) and treat it as data not instructions, restrict tools an agent can call, and add validation on tool inputs/outputs — especially important when connecting MCP servers or web content that could carry injected instructions.",
+        "Protect prompts and data. Follow the reduce-prompt-leak guidance to keep system instructions from leaking, and understand data handling: Anthropic's default API retention policy, Zero Data Retention (ZDR) options for eligible workloads, and that some features (like the MCP connector, code execution, and the Files API) are not ZDR-eligible. Match data-sensitivity requirements to the right retention configuration.",
+        "Understand Anthropic's broader safety posture. Constitutional AI, the Responsible Scaling Policy / AI Safety Levels, and the Trust Center inform enterprise risk conversations and compliance questions an architect is expected to field."
+      ],
+      "links": [
+        {
+          "label": "Usage Policy (AUP)",
+          "url": "https://www.anthropic.com/legal/aup"
+        },
+        {
+          "label": "Mitigate jailbreaks & prompt injection",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks"
+        },
+        {
+          "label": "Reduce prompt leak",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-prompt-leak"
+        },
+        {
+          "label": "API and data retention (ZDR)",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/api-and-data-retention"
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "label": "Domain 6: Stakeholder Communication & Lifecycle Management (14%)",
+      "kind": "domain",
+      "body": [
+        "Know the model lifecycle vocabulary: Active (fully supported), Legacy (still available but superseded, migration recommended), Deprecated (still works but not recommended, with a retirement date), and Retired (requests fail). Communicating this lifecycle to stakeholders and planning migrations around it is a core architect responsibility.",
+        "Plan for retirement timelines. Anthropic provides advance notice before retiring a publicly released model and notifies affected customers by email and in the docs. Track the model deprecations page, and migrate workloads to the recommended replacement well before the retirement date to avoid hard failures.",
+        "Manage API versioning and breaking changes. Pin the anthropic-version header so behavior is stable, watch release notes for new features and beta headers, and communicate the impact of parameter changes — for example, temperature/top_p/top_k now returning a 400 on Opus 4.7+, Sonnet 5, and Fable 5 — to downstream teams.",
+        "Run a disciplined migration when models change. Re-run your evaluation suite against the replacement model before cutover, update model IDs, and validate that prompts still meet success criteria, since newer models may respond differently to the same prompt (and may tokenize the same text differently).",
+        "Monitor and report on usage in production. Use the Console Usage and Cost pages (exportable CSVs broken down by API key and model) to audit which models are in use, identify deprecated-model usage, and give stakeholders clear cost and adoption reporting."
+      ],
+      "links": [
+        {
+          "label": "Model deprecations & lifecycle",
+          "url": "https://docs.claude.com/en/docs/about-claude/model-deprecations"
+        },
+        {
+          "label": "Model migration guide",
+          "url": "https://docs.claude.com/en/docs/about-claude/models/migration-guide"
+        },
+        {
+          "label": "API versioning",
+          "url": "https://docs.claude.com/en/api/versioning"
+        },
+        {
+          "label": "Release notes",
+          "url": "https://docs.claude.com/en/release-notes/overview"
+        }
+      ]
+    },
+    {
+      "id": "d7",
+      "label": "Domain 7: Developer Productivity & Operational Enablement (7%)",
+      "kind": "domain",
+      "body": [
+        "Know Claude Code as the agentic coding tool that works in the terminal, IDE, and CI, and how it fits an engineering workflow — enabling teams to build, refactor, and operate Claude-powered systems faster.",
+        "Know the Claude Agent SDK for building custom agents on the same harness that powers Claude Code, giving programmatic control (in Python and TypeScript) over tools, context, and the agent loop for production automation.",
+        "Use the Claude Console / Workbench for rapid iteration: the prompt generator, prompt improver, templates and variables, and the integrated Evaluation tool let developers prototype and test prompts without writing application code first.",
+        "Enable teams operationally via the Console's usage and cost dashboards, API key management, and organization administration so cost, access, and model usage can be governed centrally.",
+        "Leverage official reference material — the Anthropic Cookbook and SDK documentation — for reusable patterns (tool use, RAG, agents, evaluation) that shorten delivery time and standardize implementations across a team."
+      ],
+      "links": [
+        {
+          "label": "Claude Code overview",
+          "url": "https://docs.claude.com/en/docs/claude-code/overview"
+        },
+        {
+          "label": "Claude Agent SDK overview",
+          "url": "https://code.claude.com/docs/en/agent-sdk/overview"
+        },
+        {
+          "label": "Console prompting tools",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/prompting-tools"
+        },
+        {
+          "label": "Anthropic Cookbook",
+          "url": "https://github.com/anthropics/anthropic-cookbook"
+        }
+      ]
+    },
+    {
+      "id": "features",
+      "label": "Key features & APIs to know",
+      "kind": "domain",
+      "body": [
+        "Messages API — the core endpoint for multi-turn conversations, system prompts, streaming, and stop reasons.",
+        "Tool use (function calling) — Claude requests tools via tool_use blocks; you return tool_result blocks in a loop driven by JSON Schema definitions.",
+        "MCP connector — call remote MCP servers directly from the Messages API (beta header mcp-client-2025-11-20) with allowlist/denylist tool control; not ZDR-eligible.",
+        "Prompt caching — cache large, stable prompt prefixes to cut input cost and latency on repeated requests.",
+        "Adaptive thinking & effort — enable thinking with thinking: {type: 'adaptive'} and control depth with the effort parameter (low/medium/high/xhigh/max) on current models; budget_tokens is legacy and rejected on those models.",
+        "Message Batches API — asynchronous, high-volume processing at reduced cost for latency-tolerant workloads.",
+        "Citations — return grounded, verifiable references to source passages for RAG and auditability.",
+        "Files API, PDF support & Vision — upload and reference documents and process images and PDFs natively.",
+        "Token counting — estimate input tokens before sending to manage cost and stay within the context window.",
+        "Computer use — a tool capability that lets Claude operate a computer interface (screenshots, clicks, typing) for agentic automation."
+      ],
+      "links": [
+        {
+          "label": "Tool use overview",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"
+        },
+        {
+          "label": "Prompt caching",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching"
+        },
+        {
+          "label": "Message Batches API",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/batch-processing"
+        },
+        {
+          "label": "Citations",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/citations"
+        }
+      ]
+    },
+    {
+      "id": "courses",
+      "label": "Anthropic Academy courses",
+      "kind": "courses",
+      "body": [
+        "Anthropic Academy offers free, self-paced courses (hosted on Skilljar) with videos, quizzes, and completion certificates. The courses below map directly to the CCAR-P domains — start with the Claude API and MCP courses, then reinforce with the platform prompting and evaluation guidance in the docs."
+      ],
+      "links": [
+        {
+          "label": "Anthropic Academy (course catalog)",
+          "url": "https://anthropic.skilljar.com/"
+        },
+        {
+          "label": "Building with the Claude API",
+          "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+        },
+        {
+          "label": "Introduction to Model Context Protocol",
+          "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+        },
+        {
+          "label": "Model Context Protocol: Advanced Topics",
+          "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
+        }
+      ]
+    }
+  ]
+}

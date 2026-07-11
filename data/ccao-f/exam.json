@@ -54,5 +54,7 @@
     "accentInkDark": "#b6bbff",
     "accentTintDark": "#23253a",
     "onAccent": "#ffffff"
-  }
+  },
+  "version": 1,
+  "updatedAt": "2026-07-11"
 }
