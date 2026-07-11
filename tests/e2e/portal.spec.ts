@@ -116,7 +116,7 @@ test("theme toggle flips the theme; exam switcher navigates", async ({ page }) =
 
 test("admin sees pending requests", async ({ page }) => {
   await page.goto("/#/exam/CCAO-F/home");
-  await page.locator(".adminlink").click();
+  await page.getByRole("link", { name: "Admin" }).click();
   await expect(page.getByRole("heading", { name: "Access requests" })).toBeVisible();
   await expect(page.getByText("need access")).toBeVisible();
 });

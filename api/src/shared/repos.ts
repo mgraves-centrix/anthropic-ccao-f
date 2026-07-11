@@ -22,6 +22,7 @@ export class ExamsRepo {
       format: m.format, price: m.price, status: m.status,
       domainsJson: j(m.domains), scenariosJson: j(m.scenarios ?? []),
       themeJson: j(m.theme), version: m.version ?? 1, updatedAt: m.updatedAt ?? "",
+      changelogJson: j(m.changelog ?? []),
     });
   }
   private map(e: Entity): ExamMeta {
@@ -36,6 +37,8 @@ export class ExamsRepo {
       version: (e.version as number) ?? 1,
     };
     if (e.updatedAt) meta.updatedAt = e.updatedAt as string;
+    const changelog = p<ExamMeta["changelog"]>(e.changelogJson, []);
+    if (changelog && changelog.length) meta.changelog = changelog;
     return meta;
   }
   async get(examId: string): Promise<ExamMeta | undefined> {

@@ -45,6 +45,7 @@ export interface ExamMeta {
   theme: ExamTheme;
   version?: number;      // content version (bumped when the bank changes)
   updatedAt?: string;    // ISO date of last content update
+  changelog?: { version: number; date: string; note: string }[];
 }
 
 /** A user's bookmark + optional personal note on a question. */

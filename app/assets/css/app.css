@@ -142,3 +142,5 @@ a { color: var(--accent-ink); }
   .card, .verdict { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
 }
+.changelog { list-style: none; padding: 0; margin: .4rem 0; display: grid; gap: .4rem; }
+.changelog li { border-left: 3px solid var(--accent); padding-left: .6rem; }

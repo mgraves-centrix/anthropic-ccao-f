@@ -61,5 +61,12 @@
     "onAccent": "#ffffff"
   },
   "version": 1,
-  "updatedAt": "2026-07-11"
+  "updatedAt": "2026-07-11",
+  "changelog": [
+    {
+      "version": 1,
+      "date": "2026-07-11",
+      "note": "Initial release — 300+ validated, difficulty-calibrated items and a full reference-grounded study guide."
+    }
+  ]
 }

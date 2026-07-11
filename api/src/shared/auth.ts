@@ -59,6 +59,7 @@ export interface AuthConfig {
   autoApproveDomains?: string;
   githubOrg?: string;
   githubTeam?: string;
+  notifyWebhook?: string;   // optional webhook for new-access-request notifications
 }
 
 /** Optional injected GitHub org-membership check (kept out of core for testability). */

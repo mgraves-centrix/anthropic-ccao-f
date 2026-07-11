@@ -10,6 +10,7 @@ export function parseHash() {
     return { view: "exam", examId: decodeURIComponent(parts[1]), tab: parts[2] || "home" };
   }
   if (parts[0] === "admin") return { view: "admin" };
+  if (parts[0] === "drafts") return { view: "drafts" };
   return { view: "catalog" };
 }
 

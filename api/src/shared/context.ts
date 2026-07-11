@@ -28,5 +28,6 @@ export function authConfig(): AuthConfig {
   if (process.env.AUTO_APPROVE_DOMAINS) cfg.autoApproveDomains = process.env.AUTO_APPROVE_DOMAINS;
   if (process.env.GITHUB_ORG) cfg.githubOrg = process.env.GITHUB_ORG;
   if (process.env.GITHUB_TEAM) cfg.githubTeam = process.env.GITHUB_TEAM;
+  if (process.env.NOTIFY_WEBHOOK) cfg.notifyWebhook = process.env.NOTIFY_WEBHOOK;
   return cfg;
 }

@@ -75,7 +75,13 @@ async function renderHome(body, exam) {
     exam.domains.map((d) => `<li><span>${esc(d.name)}</span> <span class="mono">${d.weight}%</span></li>`).join("") +
     `</ul>` +
     (updated ? `<p class="mono muted">Content v${exam.version ?? 1} · updated ${esc(updated)}</p>` : "") +
-    `</div>`;
+    `</div>` +
+    (Array.isArray(exam.changelog) && exam.changelog.length
+      ? `<div class="card"><h3>What's new</h3><ul class="changelog">` +
+        [...exam.changelog].sort((a, b) => b.version - a.version).slice(0, 5).map((c) =>
+          `<li><span class="mono muted">v${c.version} · ${esc(new Date(c.date).toLocaleDateString())}</span> — ${esc(c.note)}</li>`).join("") +
+        `</ul></div>`
+      : "");
   body.querySelectorAll("[data-go]").forEach((b) =>
     b.addEventListener("click", () => go(`#/exam/${encodeURIComponent(exam.examId)}/${b.dataset.go}`)));
 }

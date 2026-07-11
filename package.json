@@ -17,7 +17,8 @@
     "azurite": "^3.35.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.49.0",
+    "@axe-core/playwright": "^4.10.0"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.0",

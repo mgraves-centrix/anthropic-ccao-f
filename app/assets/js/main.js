@@ -5,6 +5,7 @@ import { register, startRouter } from "./router.js";
 import { renderCatalog } from "./views/catalog.js";
 import { renderExam } from "./views/exam.js";
 import { renderAdmin } from "./views/admin.js";
+import { renderDrafts } from "./views/drafts.js";
 
 async function whoAmI() {
   try {
@@ -22,13 +23,17 @@ async function boot() {
   const me = await whoAmI();
   const chip = document.getElementById("userChip");
   if (chip) {
-    const isAdmin = (me?.userRoles || []).includes("admin");
-    chip.innerHTML = (isAdmin ? `<a href="#/admin" class="adminlink">Admin</a> ` : "") + (me?.userDetails || "");
+    const roles = me?.userRoles || [];
+    const links =
+      (roles.includes("admin") ? `<a href="#/admin" class="adminlink">Admin</a> ` : "") +
+      (roles.includes("reviewer") || roles.includes("admin") ? `<a href="#/drafts" class="adminlink">Drafts</a> ` : "");
+    chip.innerHTML = links + (me?.userDetails || "");
   }
 
   register("catalog", (el) => { document.body.removeAttribute("data-exam"); return renderCatalog(el); });
   register("exam", (el, route) => renderExam(el, route));
   register("admin", (el) => renderAdmin(el));
+  register("drafts", (el) => renderDrafts(el));
 
   const app = document.getElementById("app");
   await startRouter(app);

@@ -15,6 +15,7 @@ import {
   type ClientPrincipal, type AuthConfig, getVerifiedEmail, isAutoApproveDomain,
   newRequestRow, hasRole,
 } from "./auth.js";
+import { notify } from "./notify.js";
 
 export class ServiceError extends Error {
   constructor(public status: number, msg: string, public data?: Record<string, unknown>) { super(msg); }
@@ -56,6 +57,13 @@ export async function accessRequest(
   const role: Role = "authorized";
   const row = newRequestRow(p, justification, status, role, iso(nowMs(o)));
   await ctx.users.put(row);
+  if (status === "pending" && cfg.notifyWebhook) {
+    await notify(cfg.notifyWebhook, {
+      event: "access.request",
+      text: `New portal access request from ${row.displayName || row.email || p.userId} — approve in Admin → Requests.`,
+      meta: { email: row.email, provider: p.identityProvider },
+    });
+  }
   return { status };
 }
 
