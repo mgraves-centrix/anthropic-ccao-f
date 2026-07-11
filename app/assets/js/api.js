@@ -20,6 +20,11 @@ export const api = {
   save: (attemptId, patch) => req("PATCH", `/attempts/${encodeURIComponent(attemptId)}`, patch),
   answer: (attemptId, qid, answer) => req("POST", `/attempts/${encodeURIComponent(attemptId)}/answer`, { qid, answer }),
   submit: (attemptId) => req("POST", `/attempts/${encodeURIComponent(attemptId)}/submit`),
+  review: (attemptId) => req("GET", `/attempts/${encodeURIComponent(attemptId)}/review`),
+  bookmarkList: (examId) => req("GET", `/bookmarks${examId ? `?examId=${encodeURIComponent(examId)}` : ""}`),
+  bookmarkSet: (examId, qid, note) => req("POST", "/bookmarks", { examId, qid, note }),
+  bookmarkRemove: (examId, qid) => req("POST", "/bookmarks", { examId, qid, remove: true }),
+  drafts: (examId) => req("GET", `/exams/${encodeURIComponent(examId)}/drafts`),
   history: (scope, examId, window) =>
     req("GET", `/me/history?scope=${scope}${examId ? `&examId=${encodeURIComponent(examId)}` : ""}&window=${window}`),
   study: (examId) => req("GET", `/study/${encodeURIComponent(examId)}`),

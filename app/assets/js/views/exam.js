@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { go } from "../router.js";
 import { renderProgress } from "./progress.js";
 import { renderRunner } from "./runner.js";
+import { renderPractice } from "./practice.js";
 import { esc, safeHref } from "../util.js";
 const TABS = [["home", "Home"], ["practice", "Practice"], ["mock", "Mock"], ["study", "Study"], ["progress", "Progress"]];
 let catalogCache = null;
@@ -26,7 +27,7 @@ export async function renderExam(el, route) {
     ).join("") + `</nav><div id="tabbody" class="tabbody"></div>`;
 
   const body = el.querySelector("#tabbody");
-  if (tab === "practice") return renderRunner(body, { examId, mode: "practice" });
+  if (tab === "practice") return renderPractice(body, exam);
   if (tab === "mock") return renderRunner(body, { examId, mode: "mock" });
   if (tab === "progress") return renderProgress(body, examId);
   if (tab === "study") return renderStudy(body, exam);
@@ -54,6 +55,10 @@ async function renderStudy(body, exam) {
 async function renderHome(body, exam) {
   const hist = await api.history("exam", exam.examId, 30).catch(() => null);
   const latest = hist?.points?.length ? hist.points[hist.points.length - 1] : null;
+  const weak = (hist?.byDomain ?? []).filter((d) => d.avgPct < 70)
+    .sort((a, b) => a.avgPct - b.avgPct).slice(0, 3);
+  const updated = exam.updatedAt ? new Date(exam.updatedAt).toLocaleDateString() : null;
+
   body.innerHTML =
     `<div class="card"><h3>Readiness</h3>` +
     (latest
@@ -61,9 +66,16 @@ async function renderHome(body, exam) {
       : `<p class="muted">No attempts yet. Take a practice set to calibrate.</p>`) +
     `<p><button class="btn btn--primary" data-go="practice">Start practice</button> ` +
     `<button class="btn" data-go="mock">Take timed mock (${exam.timeLimitMin} min)</button></p></div>` +
+    (weak.length
+      ? `<div class="card recs"><h3>Focus areas</h3><p class="muted">Your weakest domains (last 30 days).</p><ul>` +
+        weak.map((d) => `<li><a href="#/exam/${encodeURIComponent(exam.examId)}/study#study-domain-${d.id}">${esc(d.name)}</a> — ${d.avgPct}% <span class="mono">study this →</span></li>`).join("") +
+        `</ul></div>`
+      : "") +
     `<div class="card"><h3>Blueprint</h3><ul class="weights">` +
     exam.domains.map((d) => `<li><span>${esc(d.name)}</span> <span class="mono">${d.weight}%</span></li>`).join("") +
-    `</ul></div>`;
+    `</ul>` +
+    (updated ? `<p class="mono muted">Content v${exam.version ?? 1} · updated ${esc(updated)}</p>` : "") +
+    `</div>`;
   body.querySelectorAll("[data-go]").forEach((b) =>
     b.addEventListener("click", () => go(`#/exam/${encodeURIComponent(exam.examId)}/${b.dataset.go}`)));
 }

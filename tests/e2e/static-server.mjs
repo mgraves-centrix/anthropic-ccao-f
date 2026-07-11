@@ -6,7 +6,7 @@ import { extname, join, normalize } from "node:path";
 
 const ROOT = new URL("../../app/", import.meta.url).pathname;
 const PORT = process.env.E2E_PORT || 4173;
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
 
 createServer(async (req, res) => {
   try {

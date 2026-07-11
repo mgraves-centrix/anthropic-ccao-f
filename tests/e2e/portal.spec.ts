@@ -22,8 +22,10 @@ async function mockApi(page: Page) {
   await page.route("**/api/study/**", (r) => r.fulfill({ json: { title: "Study Guide", sections: [{ id: "s", label: "Overview", kind: "prose", body: ["Study this."] }] } }));
   await page.route("**/api/me/history**", (r) => r.fulfill({ json: { scope: "exam", examId: "CCAO-F", window: 7, cutScore: 720, points: [{ date: "2026-07-08", scaled: 690, pass: false, examId: "CCAO-F" }, { date: "2026-07-09", scaled: 780, pass: true, examId: "CCAO-F" }], byDomain: [{ id: 1, name: "Alpha", avgPct: 82 }, { id: 2, name: "Beta", avgPct: 44 }] } }));
   await page.route("**/api/access-requests**", (r) => r.fulfill({ json: [{ provider: "aad", providerUserId: "x", displayName: "Pat", email: "pat@contoso.com", justification: "need access" }] }));
+  await page.route("**/api/bookmarks**", (r) => r.fulfill({ json: r.request().method() === "GET" ? [] : { ok: true } }));
   await page.route("**/api/attempts/*/answer", (r) => r.fulfill({ json: { correct: true, correctKeys: [0], rationale: "Because Option A is correct.", reference: { text: "Docs", url: "https://docs.claude.com/x" } } }));
-  await page.route("**/api/attempts/*/submit", (r) => r.fulfill({ json: { scaled: 780, pass: true, verdict: "green", correct: 1, total: 1, byDomain: { "1": { c: 1, t: 1, pct: 100 } }, weakDomains: [], review: [] } }));
+  await page.route("**/api/attempts/*/review", (r) => r.fulfill({ json: { scaled: 780, pass: true, verdict: "green", correct: 0, total: 1, byDomain: { "1": { c: 0, t: 1, pct: 0 } }, weakDomains: [], review: [{ qid: "Q0", yourAnswer: [1], correct: false, correctKeys: [0], rationale: "The correct choice is A.", reference: { text: "Docs", url: "https://docs.claude.com/x" } }] } }));
+  await page.route("**/api/attempts/*/submit", (r) => r.fulfill({ json: { scaled: 780, pass: true, verdict: "green", correct: 1, total: 1, byDomain: { "1": { c: 1, t: 1, pct: 100 } }, weakDomains: [], review: [{ qid: "Q0", yourAnswer: [0], correct: true, correctKeys: [0], rationale: "A is right.", reference: { text: "Docs", url: "https://docs.claude.com/x" } }] } }));
   await page.route("**/api/attempts", (r) => {
     if (r.request().method() === "POST") {
       const body = JSON.parse(r.request().postData() || "{}");
@@ -46,11 +48,28 @@ test("catalog lists exams and opens a 4-tab workspace", async ({ page }) => {
   await expect(page.locator("body")).toHaveAttribute("data-exam", "CCAO-F");
 });
 
-test("practice shows a question and gives instant feedback", async ({ page }) => {
+test("practice: configure → run → instant feedback → bookmark", async ({ page }) => {
   await page.goto("/#/exam/CCAO-F/practice");
+  await expect(page.getByRole("heading", { name: "Configure practice" })).toBeVisible();
+  await expect(page.locator('input[name="pmode"]')).toHaveCount(4); // all/weak/incorrect/bookmarked
+  await page.getByRole("button", { name: "Start practice" }).click();
   await expect(page.locator(".qstem")).toBeVisible();
+  await page.locator("[data-bmk]").click(); // bookmark the question
+  await expect(page.locator("[data-bmk]")).toHaveAttribute("aria-pressed", "true");
   await page.locator(".opt").first().click();
   await expect(page.locator(".rationale")).toContainText("Option A is correct");
+});
+
+test("mock → review answers shows per-question rationale + filters", async ({ page }) => {
+  await page.goto("/#/exam/CCAO-F/mock");
+  await expect(page.locator(".qstem")).toBeVisible();
+  await page.locator(".opt").first().click();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await page.getByRole("button", { name: "Review answers" }).click();
+  await expect(page.locator(".revq").first()).toBeVisible();
+  await expect(page.getByText("The correct choice is A.")).toBeVisible();
+  await page.getByRole("button", { name: "Incorrect", exact: true }).click(); // filter chip
+  await expect(page.locator(".revq")).toHaveCount(1);
 });
 
 test("mock submits and shows a verdict banner with score", async ({ page }) => {

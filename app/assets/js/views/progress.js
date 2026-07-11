@@ -25,10 +25,25 @@ export async function renderProgress(host, examId) {
   host.innerHTML =
     controls +
     `<div class="card"><h3>Score history</h3>${line}</div>` +
-    `<div class="card"><h3>${state.scope === "exam" ? "Average % correct by domain" : "Average score by exam"}</h3>${bars}</div>`;
+    `<div class="card"><h3>${state.scope === "exam" ? "Average % correct by domain" : "Average score by exam"}</h3>${bars}</div>` +
+    `<p><button class="btn" id="exportCsv">Export my results (CSV)</button></p>`;
 
   host.querySelectorAll("[data-window]").forEach((b) =>
     b.addEventListener("click", () => { state.window = Number(b.dataset.window); renderProgress(host, examId); }));
   host.querySelectorAll("[data-scope]").forEach((b) =>
     b.addEventListener("click", () => { state.scope = b.dataset.scope; renderProgress(host, examId); }));
+  const exp = host.querySelector("#exportCsv");
+  if (exp) exp.addEventListener("click", () => exportCsv(data?.points ?? [], examId));
+}
+
+/** Self-service export of the user's OWN results (spec nice-to-have). */
+function exportCsv(points, examId) {
+  const rows = [["date", "exam", "scaled", "pass"], ...points.map((p) => [p.date, p.examId || examId, p.scaled, p.pass])];
+  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `results-${examId || "all"}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

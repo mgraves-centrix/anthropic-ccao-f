@@ -32,6 +32,23 @@ async function boot() {
 
   const app = document.getElementById("app");
   await startRouter(app);
+  registerPwa();
+}
+
+function registerPwa() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+  // Installable PWA: surface an Install button when the browser offers it.
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    const chip = document.getElementById("userChip");
+    if (!chip || document.getElementById("installBtn")) return;
+    const btn = document.createElement("button");
+    btn.id = "installBtn"; btn.className = "iconbtn install-btn"; btn.textContent = "Install";
+    btn.addEventListener("click", async () => { btn.remove(); e.prompt(); await e.userChoice; });
+    chip.parentElement.insertBefore(btn, chip);
+  });
 }
 
 boot();

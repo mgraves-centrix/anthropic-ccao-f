@@ -5,17 +5,20 @@ import { api } from "../api.js";
 import { renderDomainBars } from "../charts/domainBars.js";
 import { go } from "../router.js";
 import { esc, safeHref } from "../util.js";
+import { renderReview } from "./review.js";
 
-export async function renderRunner(host, { examId, mode }) {
+export async function renderRunner(host, { examId, mode, filters }) {
   host.innerHTML = `<div class="card"><p class="loading">Preparing your ${esc(mode)}…</p></div>`;
   let att;
   try {
-    att = await api.createAttempt(examId, mode, mode === "practice" ? { count: 10 } : undefined);
+    att = await api.createAttempt(examId, mode, mode === "practice" ? (filters || { count: 10 }) : undefined);
   } catch (e) {
-    host.innerHTML = `<div class="card"><p>Could not start: ${esc(e.message)}</p></div>`;
+    host.innerHTML = `<div class="card"><p>Could not start: ${esc(e.message)}</p>` +
+      (e.status === 409 ? `<p class="muted">Nothing matches this selection yet — take some questions first.</p>` : "") + `</div>`;
     return;
   }
-  const S = { qs: att.questions, idx: 0, answers: {}, flags: new Set(), rev: 1, attemptId: att.attemptId, feedback: {} };
+  const S = { qs: att.questions, idx: 0, answers: {}, flags: new Set(), rev: 1, attemptId: att.attemptId, feedback: {}, bookmarked: new Set() };
+  api.bookmarkList(examId).then((bs) => { S.bookmarked = new Set(bs.map((b) => b.qid)); draw(); }).catch(() => {});
   let timer = null;
   if (mode === "mock" && att.expiresAt) startTimer(host, att.expiresAt, () => finish(true));
 
@@ -61,10 +64,13 @@ export async function renderRunner(host, { examId, mode }) {
       return `<button class="${cls}" data-i="${i}" ${fb ? "disabled" : ""}>${esc(o)}</button>`;
     }).join("");
     const timerHtml = mode === "mock" ? `<span class="timer" id="mockTimer" aria-label="time remaining">…</span>` : "";
+    const marked = S.bookmarked.has(q.qid);
     host.innerHTML =
       `<div class="runner">` +
       `<div class="runner__top"><span class="pill">${esc(examId)}</span>` +
-      `<span class="mono">${S.idx + 1} / ${S.qs.length}</span>${timerHtml}</div>` +
+      `<span class="mono">${S.idx + 1} / ${S.qs.length}</span>` +
+      `<button class="bmk${marked ? " on" : ""}" data-bmk aria-pressed="${marked}" title="Bookmark this question">${marked ? "★" : "☆"}</button>` +
+      `${timerHtml}</div>` +
       (q.scenarioId ? `<div class="scenario-frame mono">Scenario ${esc(q.scenarioId)}</div>` : "") +
       `<div class="card qcard"><p class="qstem">${esc(q.stem)}</p>` +
       (type === "multiple" ? `<p class="mono muted">Select ${q.selectCount || "all that apply"}.</p>` : "") +
@@ -81,6 +87,14 @@ export async function renderRunner(host, { examId, mode }) {
 
     host.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => select(q.qid, Number(b.dataset.i), type)));
     host.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => nav(b.dataset.nav, q.qid)));
+    const bmk = host.querySelector("[data-bmk]");
+    if (bmk) bmk.addEventListener("click", async () => {
+      try {
+        if (S.bookmarked.has(q.qid)) { await api.bookmarkRemove(examId, q.qid); S.bookmarked.delete(q.qid); }
+        else { await api.bookmarkSet(examId, q.qid); S.bookmarked.add(q.qid); }
+        draw();
+      } catch { /* ignore */ }
+    });
   }
 
   async function nav(action, qid) {
@@ -96,14 +110,14 @@ export async function renderRunner(host, { examId, mode }) {
     let res;
     try { res = await api.submit(S.attemptId); }
     catch (e) { host.innerHTML = `<div class="card"><p>Submit failed: ${esc(e.message)}</p></div>`; return; }
-    renderResults(host, examId, res, auto);
+    renderResults(host, examId, res, auto, S.attemptId);
   }
 
   draw();
 }
 
 // ---- Results: verdict banner + study recommendations (spec §10, decision I) --
-export function renderResults(host, examId, res, auto) {
+export function renderResults(host, examId, res, auto, attemptId) {
   const bars = renderDomainBars(Object.entries(res.byDomain).map(([id, v]) => ({ id, name: `Domain ${id}`, avgPct: v.pct })));
   const recs = res.weakDomains?.length
     ? `<div class="card recs"><h3>Study recommendations</h3><p class="muted">Biggest score levers first.</p><ul>` +
@@ -119,7 +133,14 @@ export function renderResults(host, examId, res, auto) {
     (auto ? " · auto-submitted (time expired)" : "") + `</div></div></div>` +
     `<div class="card"><h3>By domain</h3>${bars}</div>` +
     recs +
-    `<div class="runner__nav"><button class="btn" id="backHome">Back to exam</button></div>`;
-  const b = document.getElementById("backHome");
-  if (b) b.addEventListener("click", () => go(`#/exam/${encodeURIComponent(examId)}/home`));
+    `<div class="runner__nav">` +
+    (attemptId ? `<button class="btn btn--primary" id="reviewBtn">Review answers</button>` : "") +
+    (res.weakDomains?.length || res.correct < res.total ? `<button class="btn" id="retryBtn">Retry incorrect</button>` : "") +
+    `<button class="btn" id="backHome">Back to exam</button></div>`;
+  const back = document.getElementById("backHome");
+  if (back) back.addEventListener("click", () => go(`#/exam/${encodeURIComponent(examId)}/home`));
+  const rev = document.getElementById("reviewBtn");
+  if (rev) rev.addEventListener("click", () => renderReview(host, examId, attemptId));
+  const retry = document.getElementById("retryBtn");
+  if (retry) retry.addEventListener("click", () => renderRunner(host, { examId, mode: "practice", filters: { source: "incorrect" } }));
 }
