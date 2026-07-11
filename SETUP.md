@@ -18,6 +18,12 @@ once; they're phone-friendly where possible. Nothing here is required to *develo
 
 ---
 
+> **Fast path:** `infra/deploy.sh` scripts the CLI-automatable steps below
+> (§1–§3, §6, §7) end-to-end for subscription `c1122f34-…`. Run it from the repo
+> root after `az login`; it prompts only for the admin object-ID/email and prints
+> the two portal-only steps (§4, §5) at the end. The step-by-step below is the
+> manual equivalent / reference.
+
 ## 1. Create Azure resources (Standard tier)
 💻 With Azure CLI (or use the portal equivalents):
 ```bash
