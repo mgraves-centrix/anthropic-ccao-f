@@ -20,14 +20,17 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
+var keyVaultName = '${baseName}-kv-${take(uniqueString(subscription().id, resourceGroup().id), 8)}'
+
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${baseName}-kv'
+  name: keyVaultName
   location: location
   properties: {
     sku: { family: 'A', name: 'standard' }
     tenantId: subscription().tenantId
     enableRbacAuthorization: true
     enableSoftDelete: true
+    enablePurgeProtection: true
   }
 }
 

@@ -34,8 +34,9 @@ az group create -n rg-certportal -l eastus
 # Storage (Table) — disable public/anon, TLS1.2+
 az storage account create -n certportalstore -g rg-certportal -l eastus \
   --sku Standard_LRS --min-tls-version TLS1_2 --allow-blob-public-access false
-# Key Vault (for the Entra client secret)
-az keyvault create -n certportal-kv -g rg-certportal -l eastus
+# Key Vault (for the Entra client secret) — its name must be globally unique.
+# Pick a stable suffix and use the resulting name in the later commands.
+az keyvault create -n certportal-kv-<unique-suffix> -g rg-certportal -l eastus --enable-purge-protection true
 # Static Web App — STANDARD tier (required for custom auth + managed identity)
 az staticwebapp create -n certportal -g rg-certportal -l eastus2 --sku Standard
 ```
@@ -66,9 +67,9 @@ az role assignment create --assignee $SWA_MI \
    (guests are admitted; do **not** pick multi-tenant/personal).
 2. **Redirect URI (Web):** `https://<your-swa-host>/.auth/login/aad/callback`.
 3. **Certificates & secrets →** create a **client secret** 🔐 → copy the value.
-4. Store it in Key Vault:
+4. Store it in Key Vault (substitute your globally unique vault name):
    ```bash
-   az keyvault secret set --vault-name certportal-kv --name aad-client-secret --value "<SECRET>"
+   az keyvault secret set --vault-name certportal-kv-<unique-suffix> --name aad-client-secret --value "<SECRET>"
    ```
 5. Note the **Application (client) ID** and **Directory (tenant) ID**.
 
@@ -103,7 +104,7 @@ az role assignment create --assignee $SWA_MI \
 ```
 TABLES_ACCOUNT_URL      = https://certportalstore.table.core.windows.net
 AAD_CLIENT_ID           = <Application (client) ID>
-AAD_CLIENT_SECRET       = @Microsoft.KeyVault(SecretUri=https://certportal-kv.vault.azure.net/secrets/aad-client-secret)
+AAD_CLIENT_SECRET       = @Microsoft.KeyVault(SecretUri=https://<your-vault>.vault.azure.net/secrets/aad-client-secret)
 AAD_TENANT_ID           = <Directory (tenant) ID>
 GITHUB_CLIENT_ID        = <optional>
 GITHUB_CLIENT_SECRET    = <optional, Key Vault ref>
@@ -116,7 +117,7 @@ security-sensitive endpoints (submit/answer/attempt-create); it is created by th
 seed step below alongside the other tables and needs no extra configuration. Set
 `NOTIFY_WEBHOOK` to have pending self-service access requests posted to a channel;
 omit it to disable notifications (approvals still work via the Admin view).
-(Grant the SWA managed identity **Key Vault Secrets User** on `certportal-kv` so the
+(Grant the SWA managed identity **Key Vault Secrets User** on your Key Vault so the
 `@Microsoft.KeyVault(...)` references resolve.)
 
 ---
