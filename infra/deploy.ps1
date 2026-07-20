@@ -14,6 +14,11 @@
  Safe to re-run: az creates are idempotent; the Entra app is reused if present.
 ============================================================================
 #>
+param(
+  [string]$AdminOid = '',
+  [string]$AdminEmail = ''
+)
+
 $ErrorActionPreference = 'Stop'
 # Make native-command (az/node) failures throw on PowerShell 7.3+ (no-op on 5.1).
 try { $PSNativeCommandUseErrorActionPreference = $true } catch {}
@@ -100,9 +105,13 @@ Write-Host "==> [4/6] Building API (needed by the seeder)..."
 & npm run build:api --silent; if ($LASTEXITCODE -ne 0) { throw "npm run build:api failed" }
 
 Write-Host "==> [5/6] Seeding first admin + exam content..."
-$AdminOid = Read-Host "    Your Entra object (user) ID for the first admin [$MeOid]"
+if ([string]::IsNullOrWhiteSpace($AdminOid)) {
+  $AdminOid = Read-Host "    Your Entra object (user) ID for the first admin [$MeOid]"
+}
 if ([string]::IsNullOrWhiteSpace($AdminOid)) { $AdminOid = $MeOid }
-$AdminEmail = Read-Host "    Admin email"
+if ([string]::IsNullOrWhiteSpace($AdminEmail)) {
+  $AdminEmail = Read-Host "    Admin email"
+}
 $env:TABLES_ACCOUNT_URL = $TablesAccountUrl
 # retry while the Storage RBAC grant propagates
 for ($attempt = 1; $attempt -le 5; $attempt++) {
