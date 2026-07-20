@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
-const cfg = JSON.parse(readFileSync(new URL("../../staticwebapp.config.json", import.meta.url), "utf8"));
+const cfg = JSON.parse(readFileSync(new URL("../../app/staticwebapp.config.json", import.meta.url), "utf8"));
 
 describe("staticwebapp.config.json — auth & route gating", () => {
   it("uses /api/GetRoles as the roles source", () => {
