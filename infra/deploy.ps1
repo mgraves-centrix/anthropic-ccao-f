@@ -22,6 +22,7 @@ param(
 $ErrorActionPreference = 'Stop'
 # Make native-command (az/node) failures throw on PowerShell 7.3+ (no-op on 5.1).
 try { $PSNativeCommandUseErrorActionPreference = $true } catch {}
+$AzCli = (Get-Command az -CommandType Application -ErrorAction Stop | Select-Object -First 1 -ExpandProperty Source)
 
 # ---- Configuration (edit if you want different names/region) ---------------
 $Subscription        = 'c1122f34-b902-4637-8174-eab4662bf753'
@@ -34,7 +35,7 @@ $AuthzMode           = 'allowlist'
 
 # Helper: run az, capture trimmed stdout, throw on failure.
 function Az { param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
-  $out = & az @Args
+  $out = & $AzCli @Args
   if ($LASTEXITCODE -ne 0) { throw "az $($Args -join ' ') failed (exit $LASTEXITCODE)" }
   return ($out | Out-String).Trim()
 }
