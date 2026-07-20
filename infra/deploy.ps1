@@ -41,22 +41,22 @@ function Az { param([Parameter(ValueFromRemainingArguments = $true)][string[]]$A
 }
 
 Write-Host "==> Using subscription $Subscription"
-Az account set --subscription $Subscription | Out-Null
-$TenantId = Az account show --query tenantId -o tsv
-$MeOid    = Az ad signed-in-user show --query id -o tsv
+Az @('account', 'set', '--subscription', $Subscription) | Out-Null
+$TenantId = Az @('account', 'show', '--query', 'tenantId', '-o', 'tsv')
+$MeOid    = Az @('ad', 'signed-in-user', 'show', '--query', 'id', '-o', 'tsv')
 Write-Host "    tenant=$TenantId  signed-in-user=$MeOid"
 
 # ---- §1–§2  Resources (storage + Key Vault + Standard SWA + MI + table role)
 Write-Host "==> [1/6] Creating resource group + resources via Bicep..."
-Az group create -n $Rg -l $Location -o none | Out-Null
-Az deployment group create -g $Rg -f infra/main.bicep -p "baseName=$BaseName" "location=$Location" -o none | Out-Null
+Az @('group', 'create', '-n', $Rg, '-l', $Location, '-o', 'none') | Out-Null
+Az @('deployment', 'group', 'create', '-g', $Rg, '-f', 'infra/main.bicep', '-p', "baseName=$BaseName", "location=$Location", '-o', 'none') | Out-Null
 
-$TablesAccountUrl = Az deployment group show -g $Rg -n main --query properties.outputs.storageTableEndpoint.value -o tsv
-$StorageId = Az storage account show -n "${BaseName}store" -g $Rg --query id -o tsv
-$KvName    = Az deployment group show -g $Rg -n main --query properties.outputs.keyVaultName.value -o tsv
-$KvId      = Az keyvault show -n $KvName -g $Rg --query id -o tsv
-$SwaMiOid  = Az staticwebapp show -n $BaseName -g $Rg --query identity.principalId -o tsv
-$SwaHost   = Az staticwebapp show -n $BaseName -g $Rg --query defaultHostname -o tsv
+$TablesAccountUrl = Az @('deployment', 'group', 'show', '-g', $Rg, '-n', 'main', '--query', 'properties.outputs.storageTableEndpoint.value', '-o', 'tsv')
+$StorageId = Az @('storage', 'account', 'show', '-n', "${BaseName}store", '-g', $Rg, '--query', 'id', '-o', 'tsv')
+$KvName    = Az @('deployment', 'group', 'show', '-g', $Rg, '-n', 'main', '--query', 'properties.outputs.keyVaultName.value', '-o', 'tsv')
+$KvId      = Az @('keyvault', 'show', '-n', $KvName, '-g', $Rg, '--query', 'id', '-o', 'tsv')
+$SwaMiOid  = Az @('staticwebapp', 'show', '-n', $BaseName, '-g', $Rg, '--query', 'identity.principalId', '-o', 'tsv')
+$SwaHost   = Az @('staticwebapp', 'show', '-n', $BaseName, '-g', $Rg, '--query', 'defaultHostname', '-o', 'tsv')
 Write-Host "    table endpoint = $TablesAccountUrl"
 Write-Host "    SWA host       = $SwaHost"
 
@@ -64,40 +64,37 @@ Write-Host "    SWA host       = $SwaHost"
 # SWA identity must READ the Entra client secret from KV; YOU (the seeder) need
 # table + KV-secret write access.
 Write-Host "==> Assigning RBAC (KV Secrets User/Officer, Storage Table Data Contributor)..."
-Az role assignment create --assignee-object-id $SwaMiOid --assignee-principal-type ServicePrincipal `
-  --role "Key Vault Secrets User" --scope $KvId -o none | Out-Null
-Az role assignment create --assignee-object-id $MeOid --assignee-principal-type User `
-  --role "Key Vault Secrets Officer" --scope $KvId -o none | Out-Null
-Az role assignment create --assignee-object-id $MeOid --assignee-principal-type User `
-  --role "Storage Table Data Contributor" --scope $StorageId -o none | Out-Null
+Az @('role', 'assignment', 'create', '--assignee-object-id', $SwaMiOid, '--assignee-principal-type', 'ServicePrincipal',
+  '--role', 'Key Vault Secrets User', '--scope', $KvId, '-o', 'none') | Out-Null
+Az @('role', 'assignment', 'create', '--assignee-object-id', $MeOid, '--assignee-principal-type', 'User',
+  '--role', 'Key Vault Secrets Officer', '--scope', $KvId, '-o', 'none') | Out-Null
+Az @('role', 'assignment', 'create', '--assignee-object-id', $MeOid, '--assignee-principal-type', 'User',
+  '--role', 'Storage Table Data Contributor', '--scope', $StorageId, '-o', 'none') | Out-Null
 Write-Host "    (role propagation can take ~1-2 min; the seed step below retries)"
 
 # ---- §3  Entra app registration (primary sign-in) --------------------------
 Write-Host "==> [2/6] Entra app registration..."
 $RedirectAad = "https://$SwaHost/.auth/login/aad/callback"
-$AppId = Az ad app list --display-name $AppDisplayName --query "[0].appId" -o tsv
+$AppId = Az @('ad', 'app', 'list', '--display-name', $AppDisplayName, '--query', '[0].appId', '-o', 'tsv')
 if ([string]::IsNullOrWhiteSpace($AppId) -or $AppId -eq 'null') {
-  $AppId = Az ad app create --display-name $AppDisplayName --sign-in-audience AzureADMyOrg `
-    --web-redirect-uris $RedirectAad --query appId -o tsv
+  $AppId = Az @('ad', 'app', 'create', '--display-name', $AppDisplayName, '--sign-in-audience', 'AzureADMyOrg',
+    '--web-redirect-uris', $RedirectAad, '--query', 'appId', '-o', 'tsv')
   Write-Host "    created app $AppId"
 } else {
-  Az ad app update --id $AppId --web-redirect-uris $RedirectAad -o none | Out-Null
+  Az @('ad', 'app', 'update', '--id', $AppId, '--web-redirect-uris', $RedirectAad, '-o', 'none') | Out-Null
   Write-Host "    reusing app $AppId"
 }
 Write-Host "==> Creating client secret and storing it in Key Vault..."
-$ClientSecret = Az ad app credential reset --id $AppId --append --display-name swa --query password -o tsv
-Az keyvault secret set --vault-name $KvName --name aad-client-secret --value $ClientSecret -o none | Out-Null
+$ClientSecret = Az @('ad', 'app', 'credential', 'reset', '--id', $AppId, '--append', '--display-name', 'swa', '--query', 'password', '-o', 'tsv')
+Az @('keyvault', 'secret', 'set', '--vault-name', $KvName, '--name', 'aad-client-secret', '--value', $ClientSecret, '-o', 'none') | Out-Null
 $KvSecretUri = "https://$KvName.vault.azure.net/secrets/aad-client-secret"
 
 # ---- §6  Static Web App application settings -------------------------------
 Write-Host "==> [3/6] Setting Static Web App application settings..."
-Az staticwebapp appsettings set -n $BaseName -g $Rg --setting-names `
-  "TABLES_ACCOUNT_URL=$TablesAccountUrl" `
-  "AAD_CLIENT_ID=$AppId" `
-  "AAD_TENANT_ID=$TenantId" `
-  "AAD_CLIENT_SECRET=@Microsoft.KeyVault(SecretUri=$KvSecretUri)" `
-  "AUTHZ_MODE=$AuthzMode" `
-  "AUTO_APPROVE_DOMAINS=$AutoApproveDomains" -o none | Out-Null
+Az @('staticwebapp', 'appsettings', 'set', '-n', $BaseName, '-g', $Rg, '--setting-names',
+  "TABLES_ACCOUNT_URL=$TablesAccountUrl", "AAD_CLIENT_ID=$AppId", "AAD_TENANT_ID=$TenantId",
+  "AAD_CLIENT_SECRET=@Microsoft.KeyVault(SecretUri=$KvSecretUri)", "AUTHZ_MODE=$AuthzMode",
+  "AUTO_APPROVE_DOMAINS=$AutoApproveDomains", '-o', 'none') | Out-Null
 Write-Host "    (set NOTIFY_WEBHOOK later if you want Slack/Teams alerts on access requests)"
 
 # ---- §7  Build API + seed first admin and content --------------------------
@@ -126,7 +123,7 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
 
 # ---- §8 note: point the deploy workflow at this SWA ------------------------
 Write-Host "==> [6/6] Deployment token"
-$DeployToken = Az staticwebapp secrets list -n $BaseName -g $Rg --query properties.apiKey -o tsv
+$DeployToken = Az @('staticwebapp', 'secrets', 'list', '-n', $BaseName, '-g', $Rg, '--query', 'properties.apiKey', '-o', 'tsv')
 Write-Host ""
 Write-Host "============================================================================"
 Write-Host "CLI steps done. Remaining MANUAL steps:"
