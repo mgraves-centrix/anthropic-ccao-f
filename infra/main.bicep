@@ -5,6 +5,8 @@
 param baseName string = 'certportal'
 @description('Location')
 param location string = resourceGroup().location
+@description('Azure region for the Static Web App (Static Web Apps is not available in every Azure region)')
+param staticWebAppLocation string = 'eastus2'
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: toLower('${baseName}store')
@@ -31,7 +33,7 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 resource swa 'Microsoft.Web/staticSites@2023-12-01' = {
   name: baseName
-  location: location
+  location: staticWebAppLocation
   sku: { name: 'Standard', tier: 'Standard' } // Standard required for custom auth + MI
   identity: { type: 'SystemAssigned' }
   properties: {}

@@ -35,7 +35,7 @@ echo "    tenant=$TENANT_ID  signed-in-user=$ME_OID"
 echo "==> [1/6] Creating resource group + resources via Bicep…"
 az group create -n "$RG" -l "$LOCATION" -o none
 az deployment group create -g "$RG" -f infra/main.bicep \
-  -p baseName="$BASENAME" location="$LOCATION" -o none
+  -p baseName="$BASENAME" location="$LOCATION" staticWebAppLocation="$SWA_LOCATION" -o none
 
 TABLES_ACCOUNT_URL="$(az deployment group show -g "$RG" -n main --query properties.outputs.storageTableEndpoint.value -o tsv)"
 STORAGE_ID="$(az storage account show -n "${BASENAME}store" -g "$RG" --query id -o tsv)"

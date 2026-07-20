@@ -28,6 +28,7 @@ $AzCli = (Get-Command az -CommandType Application -ErrorAction Stop | Select-Obj
 $Subscription        = 'c1122f34-b902-4637-8174-eab4662bf753'
 $Rg                  = 'rg-certportal'
 $Location            = 'eastus'        # storage/KV region
+$SwaLocation         = 'eastus2'       # Static Web Apps supported region
 $BaseName            = 'certportal'    # must match infra/main.bicep `baseName`
 $AppDisplayName      = 'Cert Portal'
 $AutoApproveDomains  = 'majorkeytech.com,centrixlabs.com,identityfabric.ai'
@@ -49,7 +50,7 @@ Write-Host "    tenant=$TenantId  signed-in-user=$MeOid"
 # ---- §1–§2  Resources (storage + Key Vault + Standard SWA + MI + table role)
 Write-Host "==> [1/6] Creating resource group + resources via Bicep..."
 Az @('group', 'create', '-n', $Rg, '-l', $Location, '-o', 'none') | Out-Null
-Az @('deployment', 'group', 'create', '-g', $Rg, '-f', 'infra/main.bicep', '-p', "baseName=$BaseName", "location=$Location", '-o', 'none') | Out-Null
+Az @('deployment', 'group', 'create', '-g', $Rg, '-f', 'infra/main.bicep', '-p', "baseName=$BaseName", "location=$Location", "staticWebAppLocation=$SwaLocation", '-o', 'none') | Out-Null
 
 $TablesAccountUrl = Az @('deployment', 'group', 'show', '-g', $Rg, '-n', 'main', '--query', 'properties.outputs.storageTableEndpoint.value', '-o', 'tsv')
 $StorageId = Az @('storage', 'account', 'show', '-n', "${BaseName}store", '-g', $Rg, '--query', 'id', '-o', 'tsv')
