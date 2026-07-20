@@ -1,0 +1,83 @@
+{
+  "examId": "CCAR-F",
+  "name": "Claude Certified Architect – Foundations",
+  "itemCount": 60,
+  "timeLimitMin": 120,
+  "cutScore": 720,
+  "scaleMin": 100,
+  "scaleMax": 1000,
+  "format": "scenario",
+  "price": 125,
+  "status": "live",
+  "domains": [
+    {
+      "id": 1,
+      "name": "Agentic Architecture & Orchestration",
+      "weight": 27
+    },
+    {
+      "id": 2,
+      "name": "Tool Design & MCP Integration",
+      "weight": 18
+    },
+    {
+      "id": 3,
+      "name": "Claude Code Configuration & Workflows",
+      "weight": 20
+    },
+    {
+      "id": 4,
+      "name": "Prompt Engineering & Structured Output",
+      "weight": 20
+    },
+    {
+      "id": 5,
+      "name": "Context Management & Reliability",
+      "weight": 15
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "Customer Support Resolution Agent"
+    },
+    {
+      "id": "S2",
+      "title": "Code Generation with Claude Code"
+    },
+    {
+      "id": "S3",
+      "title": "Multi-Agent Research System"
+    },
+    {
+      "id": "S4",
+      "title": "Developer Productivity with Claude"
+    },
+    {
+      "id": "S5",
+      "title": "Claude Code for Continuous Integration"
+    },
+    {
+      "id": "S6",
+      "title": "Structured Data Extraction"
+    }
+  ],
+  "theme": {
+    "accent": "#6d28d9",
+    "accentInk": "#5b21b6",
+    "accentTint": "#efe9fd",
+    "accentDark": "#a78bfa",
+    "accentInkDark": "#c4b5fd",
+    "accentTintDark": "#241a3a",
+    "onAccent": "#ffffff"
+  },
+  "version": 1,
+  "updatedAt": "2026-07-11",
+  "changelog": [
+    {
+      "version": 1,
+      "date": "2026-07-11",
+      "note": "Initial release — 300+ validated, difficulty-calibrated items and a full reference-grounded study guide."
+    }
+  ]
+}

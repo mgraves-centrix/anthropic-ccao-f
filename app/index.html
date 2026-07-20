@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anthropic Certification Study Portal</title>
+  <meta name="description" content="Secure multi-exam study portal for Anthropic certification exams." />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#3b44d9" />
+  <link rel="icon" href="/assets/icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/icon.svg" />
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/app.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="brand"><span class="brand__mark" aria-hidden="true">◆</span> Cert Portal</div>
+    <div class="topbar__right">
+      <div id="examSwitcher" class="switcher" hidden></div>
+      <button id="themeToggle" class="iconbtn" type="button" aria-label="Toggle theme">◐</button>
+      <div id="userChip" class="userchip"></div>
+    </div>
+  </header>
+  <main id="main" class="main">
+    <div id="app" class="app"><p class="loading">Loading…</p></div>
+  </main>
+  <footer class="foot">
+    <span class="mono">Unofficial practice · illustrative items · not live exam content.</span>
+  </footer>
+  <script type="module" src="/assets/js/main.js"></script>
+</body>
+</html>

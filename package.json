@@ -1,0 +1,29 @@
+{
+  "name": "cert-portal",
+  "private": true,
+  "type": "module",
+  "description": "Anthropic Certification Study Portal — app + api",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:api": "tsc -p api/tsconfig.json",
+    "test:azure": "cross-env RUN_AZURE=1 vitest run tests/integration/azure-tables.test.ts",
+    "gate": "npm run typecheck && npm run test",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "azurite": "^3.35.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "@playwright/test": "^1.49.0",
+    "@axe-core/playwright": "^4.10.0",
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.3.0",
+    "@azure/functions": "^4.6.0",
+    "@azure/identity": "^4.5.0"
+  }
+}

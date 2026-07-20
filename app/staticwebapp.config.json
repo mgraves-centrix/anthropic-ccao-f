@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+  "auth": {
+    "rolesSource": "/api/GetRoles",
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/${AAD_TENANT_ID}/v2.0",
+          "clientIdSettingName": "AAD_CLIENT_ID",
+          "clientSecretSettingName": "AAD_CLIENT_SECRET"
+        }
+      },
+      "github": {
+        "registration": {
+          "clientIdSettingName": "GITHUB_CLIENT_ID",
+          "clientSecretSettingName": "GITHUB_CLIENT_SECRET"
+        }
+      }
+    }
+  },
+  "routes": [
+    { "route": "/login", "allowedRoles": ["anonymous", "authenticated"] },
+    { "route": "/request-access.html", "allowedRoles": ["authenticated"] },
+    { "route": "/.auth/*", "allowedRoles": ["anonymous", "authenticated"] },
+    { "route": "/api/GetRoles", "allowedRoles": ["authenticated"] },
+    { "route": "/api/access-requests", "methods": ["POST"], "allowedRoles": ["authenticated"] },
+    { "route": "/api/*", "allowedRoles": ["authorized"] },
+    { "route": "/admin/*", "allowedRoles": ["admin"] },
+    { "route": "/*", "allowedRoles": ["authorized"] }
+  ],
+  "responseOverrides": {
+    "401": { "redirect": "/login", "statusCode": 302 },
+    "403": { "rewrite": "/request-access.html" }
+  },
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "X-Frame-Options": "DENY",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+  },
+  "mimeTypes": { ".json": "application/json" },
+  "platform": { "apiRuntime": "node:20" }
+}

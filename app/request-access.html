@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Request access · Cert Portal</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/app.css" />
+</head>
+<body>
+  <main class="main">
+    <div class="card" id="ra">
+      <h1>Request access</h1>
+      <p id="ra-msg">You're signed in but not yet authorized. Submit a request and an
+        administrator will approve it. Some domains are approved automatically.</p>
+      <label class="mono" for="just">Reason (optional)</label>
+      <p><textarea id="just" rows="3" class="ra-textarea"></textarea></p>
+      <p><button class="btn btn--primary" id="ra-submit" type="button">Request access</button></p>
+    </div>
+  </main>
+  <script type="module" src="/assets/js/request-access.js"></script>
+</body>
+</html>

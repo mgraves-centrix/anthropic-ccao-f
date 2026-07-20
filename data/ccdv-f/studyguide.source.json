@@ -1,0 +1,360 @@
+{
+  "title": "Claude Certified Developer – Foundations (CCDV-F) Study Guide",
+  "subtitle": "A reference-grounded preparation guide covering the eight exam domains, the Claude API and Agent SDK, MCP, Claude Code, and prompt/context engineering, with links to official Anthropic documentation.",
+  "sections": [
+    {
+      "id": "glance",
+      "label": "Exam at a glance",
+      "kind": "facts",
+      "items": [
+        {
+          "label": "Exam code",
+          "value": "CCDV-F (Claude Certified Developer – Foundations)"
+        },
+        {
+          "label": "Number of items",
+          "value": "53 items (multiple-choice and multiple-response; each item states how many responses to select)"
+        },
+        {
+          "label": "Time limit",
+          "value": "120 minutes"
+        },
+        {
+          "label": "Passing score",
+          "value": "720 on a scaled range of 100–1,000 (criterion-referenced cut score)"
+        },
+        {
+          "label": "Exam fee",
+          "value": "$125 USD (per attempt)"
+        },
+        {
+          "label": "Certification validity",
+          "value": "12 months from the date the credential is awarded"
+        },
+        {
+          "label": "Result reporting",
+          "value": "Pass/fail decision plus a scaled score (100–1,000) and a percent-correct breakdown by domain (section percentages are informational, not used for pass/fail)"
+        },
+        {
+          "label": "Delivery & format",
+          "value": "Proctored via Pearson VUE (online or test center); scenario-based multiple-choice / multiple-response items"
+        }
+      ]
+    },
+    {
+      "id": "approach",
+      "label": "How to prepare",
+      "kind": "prose",
+      "body": [
+        "Anchor your study to the official documentation on docs.claude.com (which now serves from platform.claude.com), code.claude.com for Claude Code and the Agent SDK, and modelcontextprotocol.io for MCP. The exam rewards developers who have actually built with the Claude Messages API, tool use, and MCP rather than those who only memorized facts. As you read each doc page, write a small piece of working code — a tool-use loop, a prompt-caching request, an MCP client connection — so the concepts stick as procedures, not trivia.",
+        "Let the domain weights drive your time budget. Domain 2 (Applications & Integration) at 33.1% and Domain 5 (Model Selection & Optimization) at 16.8% together make up almost half the exam, so master the Messages API, streaming, structured outputs, batch processing, model selection, prompt caching, and latency/cost trade-offs first. Domain 1 (Agents & Workflows, 14.7%), Domain 6 (Prompt & Context Engineering, 11.0%), Domain 8 (Tools & MCPs, 10.6%), and Domain 7 (Security & Safety, 8.1%) form the solid middle tier. Domains 3 (Claude Code, 3.1%) and 4 (Eval, Testing & Debugging, 2.6%) are lightest — learn the essentials but do not over-invest.",
+        "Distinguish practice from mock. Use targeted practice — small focused exercises and the Anthropic cookbook — to build fluency in one skill at a time. Save full-length, timed mock exams for the last stretch to calibrate pacing (roughly 2.25 minutes per item across 53 items in 120 minutes) and to surface weak domains. After every mock, map each miss back to a specific doc page and re-read it.",
+        "Build mental models for the recurring trade-offs the exam probes: Opus vs. Sonnet vs. Haiku for capability/cost/latency; prompt caching vs. batch API for cost reduction; extended/adaptive thinking vs. standard generation; and streaming vs. blocking responses. Scenario questions typically ask you to choose the right tool for a stated constraint, so practice justifying choices in one sentence.",
+        "Finish by reviewing the safety and security material even though it is only 8.1%. Questions on API key handling, prompt-injection defenses, content moderation, guardrails via hooks, and safe tool execution are easy points if you have read the trust-and-safety and security guidance, and easy to lose if you have not."
+      ]
+    },
+    {
+      "id": "d1",
+      "label": "Domain 1: Agents & Workflows (14.7%)",
+      "kind": "domain",
+      "body": [
+        "An agent is an LLM that runs tools in a loop to accomplish a goal; a workflow is a more prescribed path where you orchestrate model calls through fixed code. Anthropic's guidance is to prefer the simplest thing that works — start with a single well-prompted call, add retrieval or a workflow, and only reach for a fully autonomous agent when the task genuinely needs open-ended tool use.",
+        "Know the common workflow patterns: prompt chaining (decompose into sequential steps), routing (classify then dispatch to a specialized prompt/model), parallelization (sectioning or voting), orchestrator-workers (a lead model delegates subtasks), and evaluator-optimizer (generate, critique, refine).",
+        "The agent loop is: send messages with tool definitions, receive a tool_use block, execute the tool, return a tool_result, and repeat until the model returns a final answer with stop_reason 'end_turn'. Give the agent a clear stopping condition and guardrails to bound cost and looping.",
+        "The Claude Agent SDK (formerly the Claude Code SDK) packages this loop with built-in tools, context management, hooks, subagents, and MCP support for building production agents in Python or TypeScript. Server-side features like compaction and context editing help long-running agents stay within the context window.",
+        "Know the deployment options and their trade-offs: custom agent loops or the Agent SDK (you host), versus managed/Anthropic-hosted agents (Anthropic runs the loop and sandbox). Design for observability and control: log each step, cap the number of iterations, and use human-in-the-loop checkpoints for high-stakes actions."
+      ],
+      "links": [
+        {
+          "label": "Building effective agents (engineering blog)",
+          "url": "https://www.anthropic.com/engineering/building-effective-agents"
+        },
+        {
+          "label": "Claude Agent SDK overview",
+          "url": "https://code.claude.com/docs/en/agent-sdk/overview"
+        },
+        {
+          "label": "Effective context engineering for AI agents",
+          "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "label": "Domain 2: Applications & Integration (33.1%)",
+      "kind": "domain",
+      "body": [
+        "The Messages API is the core surface. Every request specifies model, max_tokens, and a messages array of alternating user/assistant turns; an optional top-level system prompt sets role and behavior. Responses include content blocks, a stop_reason, and a usage object reporting input/output tokens.",
+        "Use the official SDKs (Python, TypeScript, and others) for idiomatic access. Streaming with server-sent events lets you render tokens as they are produced and reduces perceived latency; handle event types (message_start, content_block_delta, message_stop) and stop reasons correctly.",
+        "Structured outputs: get reliable JSON either by defining a tool and reading its tool_use input, or by using the structured-output feature (output_config.format with a JSON schema) and prompting Claude to fill the schema. Prefer tool-based or schema-constrained extraction for machine-consumed data.",
+        "The Message Batches API processes large volumes asynchronously (within a 24-hour window) at a 50% discount versus real-time calls — the right choice for non-latency-sensitive bulk work like classification or backfills. Contrast this with prompt caching, which reduces cost/latency for repeated prefixes in interactive workloads.",
+        "Multimodal inputs: requests can include images and PDF documents (vision), subject to per-request image/page limits. Everything in the request — system prompt, messages, tool definitions, images — counts toward the context window and appears in usage.",
+        "Handle stop reasons and errors defensively: check stop_reason (end_turn, max_tokens, tool_use, stop_sequence, pause_turn, refusal, and model_context_window_exceeded), respect rate limits with retries/backoff, and use the token counting API to estimate size before sending."
+      ],
+      "links": [
+        {
+          "label": "Messages API reference",
+          "url": "https://docs.claude.com/en/api/messages"
+        },
+        {
+          "label": "Streaming messages",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/streaming"
+        },
+        {
+          "label": "Message Batches API",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/batch-processing"
+        },
+        {
+          "label": "Client SDKs",
+          "url": "https://docs.claude.com/en/api/client-sdks"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "label": "Domain 3: Claude Code (3.1%)",
+      "kind": "domain",
+      "body": [
+        "Claude Code is Anthropic's agentic command-line coding tool that operates directly in your terminal and repository (and in IDEs, desktop, and the web), reading files, running commands, editing code, and making commits with your approval.",
+        "A CLAUDE.md file gives Claude Code persistent project context — conventions, build/test commands, and architecture notes — loaded into every session. CLAUDE.md files resolve by scope (managed policy, user, project, local) up the directory tree; Claude Code also maintains auto memory across sessions.",
+        "Extend Claude Code with custom slash commands, subagents, hooks (which run shell commands automatically on lifecycle events such as PreToolUse/PostToolUse or session start), and Skills that package reusable procedures. settings.json (and settings.local.json) configure permissions, environment, hooks, and MCP servers by scope.",
+        "Claude Code speaks MCP: connect external MCP servers to add tools and data sources, and it can act as an MCP client for connectors you configure.",
+        "It runs interactively in the terminal, non-interactively in CI/scripts (headless mode), and via the Agent SDK for programmatic use."
+      ],
+      "links": [
+        {
+          "label": "Claude Code overview",
+          "url": "https://code.claude.com/docs/en/overview"
+        },
+        {
+          "label": "Manage Claude's memory (CLAUDE.md)",
+          "url": "https://code.claude.com/docs/en/memory"
+        },
+        {
+          "label": "Claude Code settings",
+          "url": "https://code.claude.com/docs/en/settings"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "label": "Domain 4: Eval, Testing & Debugging (2.6%)",
+      "kind": "domain",
+      "body": [
+        "Build empirical evaluations: define task-specific success criteria, assemble a representative test set, and grade outputs with code-based checks, human review, or an LLM-as-judge, depending on how objective the task is.",
+        "Iterate systematically — change one variable at a time (prompt wording, model, effort/thinking, tool definitions), re-run the eval, and compare metrics rather than eyeballing single examples.",
+        "Use the Anthropic Console's prompt tools (prompt generator, prompt improver, and the Evaluate tab with side-by-side test-case comparison and grading) to develop and grade prompts before shipping.",
+        "Debug through trace analysis: inspect the model's tool_use inputs, validate your tool schemas, and confirm your code returns well-formed tool_result blocks. Isolate whether a failure originates in the integration layer or in model output; many 'model' failures are actually malformed tool contracts.",
+        "Reduce hallucinations and increase reliability with grounding (provide sources, allow 'I don't know') and defensive parsing of confident-sounding output; reproduce issues as deterministically as possible when investigating failure modes."
+      ],
+      "links": [
+        {
+          "label": "Define success criteria and build evaluations",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/develop-tests"
+        },
+        {
+          "label": "Reducing hallucinations",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+        },
+        {
+          "label": "Using the Evaluation tool (Console)",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/eval-tool"
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "label": "Domain 5: Model Selection & Optimization (16.8%)",
+      "kind": "domain",
+      "body": [
+        "Match the model to the job across the Claude family: Opus for the hardest reasoning and agentic work, Sonnet for a strong balance of capability, speed, and cost, and Haiku for high-volume, latency-sensitive, low-cost tasks. Start with the smallest model that meets the quality bar and upgrade only if needed. Watch for breaking behavior changes across model releases.",
+        "Prompt caching cuts cost and latency by reusing a cached prefix. The minimum cacheable prefix is model-dependent — roughly 1,024 to 4,096 tokens depending on the model (about 4,096 for Opus 4.x and Haiku 4.5, lower for some Sonnet models); prefixes below the minimum silently won't cache. Default TTL is 5 minutes (refreshed on hit); a 1-hour TTL is available. Cache writes cost ~1.25x base input (2x for the 1-hour TTL), cache hits ~0.1x; track cache_creation_input_tokens and cache_read_input_tokens in usage.",
+        "The Message Batches API gives a 50% discount for asynchronous bulk work — combine model choice, batching, and caching to hit cost targets.",
+        "Context management matters for both cost and accuracy: as tokens grow, recall degrades ('context rot'). Use server-side compaction and context editing (tool-result and thinking-block clearing) for long conversations, and the token counting API to estimate before sending.",
+        "Extended/adaptive thinking and effort levels trade latency and output tokens for deeper reasoning; thinking tokens are billed as output and count toward the context window. Use higher effort for hard problems and disable or lower it for simple, latency-sensitive calls. Tune max_tokens and stop_sequences to control output cost and behavior.",
+        "Optimize latency with streaming, smaller models, shorter outputs, prompt caching, and by keeping prompts lean; measure real usage rather than guessing."
+      ],
+      "links": [
+        {
+          "label": "Models overview & comparison",
+          "url": "https://docs.claude.com/en/docs/about-claude/models/overview"
+        },
+        {
+          "label": "Prompt caching",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-caching"
+        },
+        {
+          "label": "Context windows",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/context-windows"
+        },
+        {
+          "label": "Reducing latency",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-latency"
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "label": "Domain 6: Prompt & Context Engineering (11.0%)",
+      "kind": "domain",
+      "body": [
+        "Follow the core prompting best practices: be clear and direct, give Claude a role via the system prompt, provide multishot examples, let Claude think step by step (chain of thought), and use XML tags to delimit sections like <instructions>, <context>, and <example>.",
+        "Structure long prompts deliberately: put stable, reusable content (system prompt, instructions, documents) near the top so it can be prompt-cached, and place the variable user query last. Long-document guidance recommends putting documents before the question.",
+        "Context engineering is curating what goes into the window, not just how much. Because accuracy degrades as context grows, include only relevant material, summarize or retrieve rather than dump, prune stale tool output, and use compaction/context editing and subagents for long agent runs.",
+        "Steer format by controlling placement across system vs. user turns and by using output constraints and stop_sequences (note that assistant-turn prefilling is not supported on the latest models — use structured outputs or explicit instructions instead).",
+        "Use Console tooling — the prompt generator and prompt improver — to bootstrap and refine prompts, then validate changes with evaluations rather than intuition."
+      ],
+      "links": [
+        {
+          "label": "Prompt engineering overview",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview"
+        },
+        {
+          "label": "Use XML tags to structure prompts",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags"
+        },
+        {
+          "label": "Claude prompting best practices",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+        },
+        {
+          "label": "Effective context engineering for AI agents",
+          "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+        }
+      ]
+    },
+    {
+      "id": "d7",
+      "label": "Domain 7: Security & Safety (8.1%)",
+      "kind": "domain",
+      "body": [
+        "Protect credentials: store API keys in environment variables or a secrets manager, never in client-side code or source control, scope and rotate keys, and call the API from a backend so keys are never exposed to end users.",
+        "Defend against prompt injection and jailbreaks, especially in tool-using and RAG systems where untrusted content enters the context. Separate trusted instructions from untrusted data (XML tags, clear roles), validate and sanitize tool inputs/outputs, and treat model output as untrusted before acting on it.",
+        "Apply guardrails and safe-deployment practices: keep Claude in character and on-task, allow it to refuse or say 'I don't know', layer content moderation/filtering for user-generated inputs and outputs, and reduce prompt leaks.",
+        "Practice secure-by-design and least privilege for tools and agents: give tools the narrowest scope needed, require human approval for destructive or high-stakes actions (enforced with hooks), and sandbox code execution.",
+        "Understand data handling: know how the API retention model works, and that features eligible for Zero Data Retention (ZDR) do not store prompts or responses after the response is returned; follow usage policies and compliance guidance (including HIPAA-readiness where applicable)."
+      ],
+      "links": [
+        {
+          "label": "Mitigate jailbreaks and prompt injections",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks"
+        },
+        {
+          "label": "Reduce prompt leak",
+          "url": "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-prompt-leak"
+        },
+        {
+          "label": "Admin API (manage & rotate API keys)",
+          "url": "https://docs.claude.com/en/api/administration-api"
+        },
+        {
+          "label": "API and data retention (ZDR, HIPAA)",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/api-and-data-retention"
+        }
+      ]
+    },
+    {
+      "id": "d8",
+      "label": "Domain 8: Tools & MCPs (10.6%)",
+      "kind": "domain",
+      "body": [
+        "Tool use (function calling): define tools with a name, description, and JSON Schema input_schema; Claude returns a tool_use block with arguments; your code executes and returns a tool_result. Good descriptions and schemas are the single biggest driver of correct tool calls. tool_choice can force, allow, or disable tool use.",
+        "Anthropic also provides server/client tools such as web search, code execution, the text-editor and computer-use tools, and the memory tool — know which run on Anthropic's side (server tools) versus in your environment (client tools).",
+        "MCP (Model Context Protocol) is an open standard that connects Claude to external tools, data, and prompts through a uniform client-server interface, so an integration built once works across MCP-compatible clients.",
+        "MCP servers expose three primitive types: tools (model-invoked actions), resources (readable data/context), and prompts (reusable templates). Clients (like Claude Code or the Claude Developer Platform) connect to servers over stdio or HTTP transports.",
+        "The MCP connector lets the Messages API call remote MCP servers directly, and you can build custom servers with the official SDKs. Weigh the trade-offs across built-in tools, custom tools, Skills, and MCP servers for a given use case, and manage tool context with the tool search tool when many tools inflate the prompt."
+      ],
+      "links": [
+        {
+          "label": "Tool use overview",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"
+        },
+        {
+          "label": "Model Context Protocol (MCP) — Anthropic docs",
+          "url": "https://docs.claude.com/en/docs/mcp"
+        },
+        {
+          "label": "MCP official site & specification",
+          "url": "https://modelcontextprotocol.io/"
+        },
+        {
+          "label": "MCP connector (Messages API)",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/mcp-connector"
+        }
+      ]
+    },
+    {
+      "id": "features",
+      "label": "Key features & APIs to know",
+      "kind": "domain",
+      "body": [
+        "Messages API — the primary endpoint for all Claude interactions; model, messages, system, max_tokens, tools, and usage.",
+        "Streaming (SSE) — incremental token delivery for lower perceived latency; handle content_block_delta and stop events.",
+        "Tool use / function calling — JSON-Schema tools, tool_use/tool_result loop, tool_choice control.",
+        "Prompt caching — cache_control breakpoints, model-specific minimums, 5-minute/1-hour TTL, cache read/write pricing.",
+        "Message Batches API — asynchronous bulk processing (24-hour window) at a 50% discount.",
+        "Extended / adaptive thinking and effort levels — deeper reasoning; thinking tokens billed as output and counted toward the context window.",
+        "Context windows, compaction & context editing — large context windows on current models; server-side compaction and tool-result/thinking-block clearing to fight context rot.",
+        "Token counting API — estimate request size before sending.",
+        "Vision & PDF support — images and document pages as inputs, subject to per-request limits.",
+        "Model Context Protocol (MCP) — tools, resources, and prompts over stdio/HTTP; MCP connector in the Messages API.",
+        "Claude Agent SDK — production agent loop (Python/TypeScript) with built-in tools, context management, hooks, subagents, and MCP integration.",
+        "Structured outputs — reliable JSON via tools or the output_config.format schema feature.",
+        "Rate limits, retries & Console tooling — backoff handling plus the Console prompt/eval tools."
+      ],
+      "links": [
+        {
+          "label": "API overview",
+          "url": "https://docs.claude.com/en/api/overview"
+        },
+        {
+          "label": "Tool use overview",
+          "url": "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"
+        },
+        {
+          "label": "Extended thinking",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        },
+        {
+          "label": "Token counting",
+          "url": "https://docs.claude.com/en/docs/build-with-claude/token-counting"
+        },
+        {
+          "label": "Claude Agent SDK overview",
+          "url": "https://code.claude.com/docs/en/agent-sdk/overview"
+        }
+      ]
+    },
+    {
+      "id": "courses",
+      "label": "Anthropic Academy & official prep",
+      "kind": "courses",
+      "links": [
+        {
+          "label": "CCDV-F certification page (Anthropic Partner Academy)",
+          "url": "https://anthropic-partners.skilljar.com/claude-certified-developer-foundations-certification"
+        },
+        {
+          "label": "Anthropic Academy (course catalog)",
+          "url": "https://anthropic.skilljar.com/"
+        },
+        {
+          "label": "Building with the Claude API",
+          "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+        },
+        {
+          "label": "Model Context Protocol (MCP)",
+          "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+        },
+        {
+          "label": "Claude Code in Action",
+          "url": "https://anthropic.skilljar.com/claude-code-in-action"
+        },
+        {
+          "label": "Claude Developer Platform — API docs",
+          "url": "https://docs.claude.com/en/api/overview"
+        }
+      ]
+    }
+  ]
+}

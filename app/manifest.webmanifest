@@ -1,0 +1,13 @@
+{
+  "name": "Anthropic Certification Study Portal",
+  "short_name": "Cert Portal",
+  "description": "Secure multi-exam study portal for Anthropic certification exams.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14161a",
+  "theme_color": "#3b44d9",
+  "icons": [
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
