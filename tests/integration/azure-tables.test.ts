@@ -2,6 +2,7 @@
 // default gate stays fast/deterministic; run via `npm run test:azure`.
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { spawn, type ChildProcess } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { AzureTableRepo } from "../../api/src/shared/tables.js";
 
 const RUN = process.env.RUN_AZURE === "1";
@@ -24,7 +25,8 @@ async function waitReachable(timeoutMs = 20000) {
 describe.skipIf(!RUN)("AzureTableRepo against Azurite", () => {
   beforeAll(async () => {
     process.env.TABLES_CONNECTION_STRING = "UseDevelopmentStorage=true";
-    proc = spawn("npx", ["azurite-table", "--location", ".azurite-test", "--silent"], { stdio: "ignore" });
+    const azuriteTable = fileURLToPath(new URL("../../node_modules/azurite/dist/src/table/main.js", import.meta.url));
+    proc = spawn(process.execPath, [azuriteTable, "--location", ".azurite-test", "--silent"], { stdio: "ignore" });
     await waitReachable();
   }, 40000);
 

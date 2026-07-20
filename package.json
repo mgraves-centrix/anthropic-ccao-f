@@ -8,9 +8,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:api": "tsc -p api/tsconfig.json",
-    "test:azure": "RUN_AZURE=1 vitest run tests/integration/azure-tables.test.ts",
+    "test:azure": "cross-env RUN_AZURE=1 vitest run tests/integration/azure-tables.test.ts",
     "gate": "npm run typecheck && npm run test",
-    "test:e2e": "PW_CHROMIUM=/opt/pw-browsers/chromium playwright test"
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
@@ -18,7 +18,8 @@
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
     "@playwright/test": "^1.49.0",
-    "@axe-core/playwright": "^4.10.0"
+    "@axe-core/playwright": "^4.10.0",
+    "cross-env": "^7.0.3"
   },
   "dependencies": {
     "@azure/data-tables": "^13.3.0",
